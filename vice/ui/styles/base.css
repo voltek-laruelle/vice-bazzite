@@ -1,0 +1,199 @@
+/* ── base.css: fonts, reset, tokens, app shell, ambient background ──────── */
+/* ── Local fonts (variable: one woff2 covers all weights) ───────── */
+@font-face { font-family: 'Geist'; font-weight: 100 900; font-style: normal; src: url('/fonts/Geist.woff2') format('woff2-variations'); font-display: swap; }
+@font-face { font-family: 'Inter'; font-weight: 100 900; font-style: normal; src: url('/fonts/Inter.woff2') format('woff2-variations'); font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 100 900; font-style: normal; src: url('/fonts/JetBrainsMono.woff2') format('woff2-variations'); font-display: swap; }
+
+/* ════════════════════════════════════════════════════════════════════
+   VICE, Liquid Glass dark UI
+   Cold void canvas · drifting theme glows · glass panels · pill geometry
+   ════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Keep the hidden attribute authoritative even on elements whose display
+   is set by author CSS (e.g. .btn-pill's inline-flex). */
+[hidden] { display: none !important; }
+
+:root {
+  --bg:           #050810;
+  --text:         #f2f5fa;
+  --text-dim:     rgba(242,245,250,.55);
+  --text-ghost:   rgba(242,245,250,.4);
+  --panel:        rgba(12,18,32,.55);        /* sidebar / player: + backdrop blur(32px) */
+  --panel-heavy:  rgba(12,18,32,.72);        /* mini-player */
+  --card:         rgba(255,255,255,.05);     /* + backdrop blur(26px) */
+  --glass-edge:   inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.05);
+  --line:         rgba(255,255,255,.07);
+  --line-hi:      rgba(255,255,255,.14);
+  --frost:        rgba(255,255,255,.05);
+  --frost-hi:     rgba(255,255,255,.1);
+  --r-card:       14px;
+  --r-panel:      16px;
+  --r-row:        10px;
+  --r-sm:         10px;
+  --r-xs:         7px;
+  --r-pill:       99px;
+  --accent:       #0099ff;
+  --accent-hi:    #33adff;
+  --accent-lo:    #0077e6;
+  --accent-text:  #7fc4ff;
+  --accent-rgb:   0,153,255;
+  --glow-1:       #123f8f;
+  --glow-2:       #0d6b74;
+  --glow-3:       #3b2a8f;
+  /* Soft top-light sheen layered over glass fills so every floating
+     surface carries its own faint gradient. */
+  --card-sheen:   linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 55%, rgba(255,255,255,.045));
+  /* Richer accent-tinted gradient for the free-floating surfaces (player,
+     viewer, quit pill). Follows the active theme via --accent-rgb. */
+  --float-sheen:  linear-gradient(150deg, rgba(var(--accent-rgb),.20), rgba(var(--accent-rgb),.05) 42%, rgba(255,255,255,.05) 78%);
+  /* One glass recipe for the big panels (sidebar, editor panels). They only
+     ever sit over the ambient field, so they stay translucent and let the
+     theme glows through rather than going solid under .perf-low. */
+  --glass-fill:   var(--card-sheen), rgba(14,20,36,.28);
+  --glass-blur:   blur(46px) saturate(1.35);
+  --glass-ring:   inset 0 1px 0 rgba(255,255,255,.1), inset 0 0 0 1px rgba(255,255,255,.06),
+                  0 14px 40px rgba(0,0,0,.35);
+  /* Surfaces that float over real content (modals, player, toasts, popovers).
+     Without backdrop blur there is nothing to frost, so they carry their own
+     gradient instead of a flat fill and keep the accent tint either way. */
+  --float-solid:  var(--float-sheen), linear-gradient(160deg, rgba(23,31,53,.93), rgba(12,18,32,.96));
+  --pop-solid:    var(--float-sheen), linear-gradient(160deg, rgba(26,35,60,.9), rgba(14,21,38,.94));
+  --danger:       #ff4763;
+  --danger-text:  #ff8598;
+  --warn:         #f5b544;
+  --ok:           #22c55e;
+  --ease:         cubic-bezier(.22, 1, .36, 1);
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+a { color: var(--accent-text); text-decoration: none; }
+a:hover { color: #a8d6ff; }
+
+.mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-feature-settings: 'tnum'; }
+.eyebrow-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; color: var(--text-ghost); }
+.display-title { font-family: 'Geist', 'Inter', sans-serif; font-size: 34px; font-weight: 600; letter-spacing: -.03em; }
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.16); }
+
+/* ── Ambient background: three blurred glows drifting on slow loops ── */
+#ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+#ambient .glow { position: absolute; border-radius: 50%; transition: background 1.2s ease; }
+#ambient .g1 { width: 1200px; height: 1200px; filter: blur(130px); opacity: .55;
+  background: radial-gradient(circle, var(--glow-1), transparent 62%);
+  top: -480px; left: -300px; animation: vgDrift1 24s ease-in-out infinite; }
+#ambient .g2 { width: 900px; height: 900px; filter: blur(120px); opacity: .45;
+  background: radial-gradient(circle, var(--glow-2), transparent 65%);
+  bottom: -360px; right: -200px; animation: vgDrift2 30s ease-in-out infinite; }
+#ambient .g3 { width: 800px; height: 800px; filter: blur(140px); opacity: .3;
+  background: radial-gradient(circle, var(--glow-3), transparent 68%);
+  top: 30%; left: 36%; animation: vgDrift3 36s ease-in-out infinite; }
+@keyframes vgDrift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(90px,50px) scale(1.15); } }
+@keyframes vgDrift2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-70px,-40px) scale(.9); } }
+/* No rotation: .g3 is a circular gradient in a square box, so turning it is
+   invisible and only costs the compositor a transform it cannot skip. */
+@keyframes vgDrift3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(40px,-60px); } }
+@keyframes vgPulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+
+/* ── App shell: fixed sidebar + scrolling content column ─────────── */
+.app-shell { position: relative; z-index: 1; display: flex; height: 100vh; }
+.content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.stage { flex: 1; min-height: 0; overflow-y: auto; padding: 26px 28px 128px; }
+
+.view { display: none; animation: viewIn .4s var(--ease); }
+.view.active { display: block; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01s !important; transition-duration: 0.01s !important; }
+  #ambient .glow { animation: none; }
+}
+
+/* Reduced effects (see perf.js): per-frame backdrop blur is what makes
+   software rendering feel laggy, so it is dropped. The sidebar and cards only
+   ever sit over the ambient field, so they stay translucent and the gradient
+   shows through them; surfaces that overlay real content (modals, player bar,
+   popovers) go solid. Every endless animation stops too: while the glows
+   drift, the whole viewport repaints each frame and every glass surface above
+   them has to blur again, which is most of the cost this mode exists to
+   avoid. */
+.perf-low * { backdrop-filter: none !important; }
+.perf-low #ambient .glow { filter: none; animation: none; }
+.perf-low .clip-dot, .perf-low .side-buffer-dot,
+.perf-low .rec-dot.live, .perf-low .rec-dot.session { animation: none; }
+.perf-low .view { animation: none; }
+.perf-low .modal, .perf-low .modal.viewer-modal, .perf-low .tutorial-box,
+.perf-low .restart-box, .perf-low .npl-box { background: var(--float-solid); }
+.perf-low #player-bar, .perf-low .toast, .perf-low .quit-float,
+.perf-low .pl-menu, .perf-low #hl-color-picker-popup { background: var(--pop-solid); }
+
+/* ── Boot splash: holds the first frame until the data is in ──────── */
+#boot { position: fixed; inset: 0; z-index: 4000; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: radial-gradient(120% 90% at 50% 40%, rgba(var(--accent-rgb),.09), transparent 60%), var(--bg);
+  transition: opacity .45s var(--ease); }
+#boot.done { opacity: 0; pointer-events: none; }
+.boot-mark { position: relative; width: 54px; height: 54px; display: flex;
+  align-items: center; justify-content: center; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-hi), var(--accent-lo));
+  color: #001428; box-shadow: 0 0 34px rgba(var(--accent-rgb),.5); }
+.boot-ring { position: absolute; inset: -9px; border-radius: 50%;
+  border: 2px solid transparent; border-top-color: rgba(var(--accent-rgb),.9);
+  border-right-color: rgba(var(--accent-rgb),.35);
+  animation: bootSpin 1s linear infinite; }
+.boot-word { margin-top: 16px; font-family: 'Geist', 'Inter', sans-serif;
+  font-size: 21px; font-weight: 600; letter-spacing: -.03em; }
+.boot-sub { font-size: 12.5px; color: var(--text-dim);
+  animation: bootPulse 1.8s ease-in-out infinite; }
+@keyframes bootSpin { to { transform: rotate(360deg); } }
+@keyframes bootPulse { 0%, 100% { opacity: .45; } 50% { opacity: .9; } }
+@media (prefers-reduced-motion: reduce) {
+  .boot-ring, .boot-sub { animation: none; }
+  .boot-ring { border-color: rgba(var(--accent-rgb),.5); }
+}
+
+/* Top-of-window banners: no H.264 decoder in this WebEngine build, the
+   capture backend refusing to start, CPU-encoding fallback, and the GPU
+   refusing the configured codec. */
+#codec-banner, #recorder-banner, #cpu-fallback-banner, #gpu-codec-banner {
+  position: relative; z-index: 30; display: flex; align-items: flex-start;
+  gap: 10px; margin: 10px 28px 0; padding: 12px 16px;
+  border-radius: var(--r-card); background: rgba(245,181,68,.08);
+  box-shadow: inset 0 0 0 1px rgba(245,181,68,.35);
+  color: var(--warn); font-size: 13px; line-height: 1.6; }
+#codec-banner[hidden], #recorder-banner[hidden], #cpu-fallback-banner[hidden],
+#gpu-codec-banner[hidden] { display: none; }
+#codec-banner svg, #recorder-banner svg, #cpu-fallback-banner svg,
+#gpu-codec-banner svg { flex-shrink: 0; margin-top: 2px; }
+/* A stopped recorder is worse than a degraded one, so it reads as an error. */
+#recorder-banner { background: rgba(239,68,68,.08);
+  box-shadow: inset 0 0 0 1px rgba(239,68,68,.35); color: var(--err, #ef4444); }
+#recorder-banner .codec-banner-text strong { color: var(--err, #ef4444); }
+#recorder-banner-detail { display: block; margin: 2px 0 4px; }
+.codec-banner-text { color: var(--text-dim); }
+.codec-banner-text strong { color: var(--warn); }
+.codec-banner-text .mono { color: var(--text); font-size: 12px; }
+.codec-banner-close { background: none; border: none; color: var(--text-dim);
+  cursor: pointer; padding: 2px; margin-left: auto; flex-shrink: 0; }
+.codec-banner-close:hover { color: var(--text); }
+
+/* Engines without backdrop-filter get solid overlays instead of grey mush. */
+@supports not (backdrop-filter: blur(1px)) {
+  .modal, .modal.viewer-modal, .tutorial-box, .restart-box, .npl-box { background: var(--float-solid); }
+  #player-bar, .toast, .quit-float, .pl-menu,
+  #hl-color-picker-popup { background: var(--pop-solid); }
+}

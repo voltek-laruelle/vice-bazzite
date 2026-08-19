@@ -1,0 +1,125 @@
+/* ── settings.css: rail, glass cards, inputs, sliders, swatches ─────────── */
+.settings-layout { display: flex; gap: 20px; align-items: flex-start; }
+@media (max-width: 900px) { .settings-layout { flex-direction: column; } .settings-rail { position: static; flex-direction: row; flex-wrap: wrap; width: 100%; } }
+
+.settings-rail { width: 170px; flex: none; position: sticky; top: 0;
+  display: flex; flex-direction: column; gap: 2px; }
+.rail-item { background: none; border: none; text-align: left; padding: 8px 13px;
+  font: inherit; font-size: 13px; font-weight: 500; color: rgba(242,245,250,.68);
+  border-radius: 9px; cursor: pointer; transition: background .18s, color .18s; }
+.rail-item:hover { background: rgba(255,255,255,.06); }
+.rail-item.active { color: #fff;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),.35), rgba(var(--accent-rgb),.18));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(var(--accent-rgb),.25); }
+
+.settings-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
+.settings-card { background: var(--card-sheen), rgba(255,255,255,.02); backdrop-filter: blur(26px);
+  border-radius: var(--r-panel); overflow: hidden; box-shadow: var(--glass-edge); padding: 0 22px; }
+.settings-card-hd { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+  color: var(--text-ghost); letter-spacing: 0.14em; text-transform: uppercase; }
+.settings-card-hd svg { width: 14px; height: 14px; color: var(--accent-text); }
+
+.settings-row { padding: 16px 0; display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.settings-row:last-child { border-bottom: none; }
+.settings-row-stack { align-items: flex-start; }
+
+/* Custom notification sound paths, one row per event. */
+.sound-grid { display: grid; grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 10px; align-items: center; min-width: 0; }
+.sound-grid label { color: var(--text-dim); font-size: 11.5px; white-space: nowrap; }
+.sound-grid input { min-width: 0; width: 100%; }
+/* Long device labels must never squeeze the label column or overflow the
+   card: the label keeps a readable width and wide controls get capped. */
+.settings-row > .s-label { flex: 1 1 45%; min-width: 170px; }
+.settings-row select { max-width: min(340px, 100%); }
+.s-label strong { display: block; font-size: 13.5px; font-weight: 500; letter-spacing: -0.01em; }
+.s-label span { display: block; font-size: 12px; color: rgba(242,245,250,.5); margin-top: 2px; line-height: 1.5; }
+
+select, input[type=text], input[type=number], textarea {
+  background: rgba(0,0,0,.3); border: none; border-radius: 9px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+  color: var(--text); font: inherit; font-size: 12.5px; padding: 8px 11px; outline: none;
+  transition: box-shadow .15s, background .15s; }
+select:focus, input[type=text]:focus, input[type=number]:focus, textarea:focus {
+  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px rgba(var(--accent-rgb),0.15); }
+select { cursor: pointer; padding-right: 32px; appearance: none; min-width: 170px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; }
+/* Native dropdown popups ignore the page background but inherit the text
+   color, leaving white-on-white menus on some desktops (KDE Plasma 6 +
+   Wayland). System colors hand contrast back to the OS menu renderer. */
+select option { background-color: Menu; color: MenuText; }
+input[type=text] { width: 240px; }
+input[type=number] { width: 100px; }
+
+.range-group { display: flex; align-items: center; gap: 12px; }
+.range-val { font-size: 11px; color: rgba(242,245,250,.7); font-weight: 600; min-width: 58px; text-align: right; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 150px; height: 3px;
+  background: rgba(255,255,255,0.1); border-radius: 2px; outline: none; cursor: pointer;
+  box-shadow: none; padding: 0; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none;
+  width: 14px; height: 14px; border-radius: 50%; background: var(--accent); cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb),0.2), 0 0 10px rgba(var(--accent-rgb),0.6);
+  transition: transform .15s; }
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+
+.swatches { display: flex; gap: 8px; align-items: center; }
+.swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+  transition: transform .15s, box-shadow .2s; position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
+.swatch:hover { transform: scale(1.12); }
+.swatch.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px rgba(255,255,255,.85); }
+
+.save-bar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding-top: 4px; }
+.saved-msg { font-size: 12.5px; color: #4ade80; opacity: 0; transition: opacity .3s;
+  display: flex; align-items: center; gap: 6px; }
+.saved-msg.show { opacity: 1; }
+.saved-msg svg { width: 14px; height: 14px; }
+
+.key-capture-btn { background: rgba(0,0,0,.3); border: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+  border-radius: 9px; color: var(--text); padding: 7px 14px;
+  font-size: 12px; cursor: pointer; min-width: 134px; text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  transition: background .15s, color .15s, box-shadow .15s; }
+.key-capture-btn:hover { background: rgba(255,255,255,.06); }
+.key-capture-btn.listening { background: rgba(var(--accent-rgb),0.18);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.6);
+  color: var(--accent-text); animation: kcPulse 1.2s ease-in-out infinite; }
+@keyframes kcPulse { 0%,100% { box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.6), 0 0 0 0 rgba(var(--accent-rgb),0.35); } 50% { box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.6), 0 0 0 7px transparent; } }
+
+.clip-preset-panel { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 340px; }
+.clip-preset-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.clip-preset-row { display: grid; grid-template-columns: minmax(122px, 1fr) 82px 22px 30px; gap: 8px; align-items: center; }
+.clip-preset-row .key-capture-btn { min-width: 0; width: 100%; }
+.clip-preset-row input[type=number] { width: 82px; }
+.clip-preset-unit { color: var(--text-dim); font-size: 12px; }
+.clip-preset-remove { width: 30px; padding: 0 !important; }
+.btn-sq { flex: 0 0 30px !important; width: 30px; padding: 0 !important; }
+
+/* Separate-audio-track builder */
+.track-builder { display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+  min-width: 0; max-width: 100%; }
+.track-add-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.track-add-row select { max-width: min(260px, 100%); min-width: 0; }
+.track-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 100%; }
+/* Says which tracks the desktop-audio toggle is about to silence (#137). */
+.track-warning { margin-top: 7px; color: #fcd34d; font-size: 11px;
+  line-height: 1.45; text-align: right; max-width: 100%; }
+.track-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+  padding: 4px 10px; border-radius: var(--r-pill);
+  background: rgba(255,255,255,0.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+  max-width: 100%; }
+.track-chip .track-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track-chip .track-num { color: var(--accent-text); font-weight: 600; }
+.track-chip button { background: none; border: none; box-shadow: none; color: var(--text-dim);
+  cursor: pointer; padding: 0 2px; font-size: 14px; line-height: 1; }
+.track-chip button:hover { color: var(--danger-text); }
+.track-chip .track-move { font-size: 12px; }
+.track-chip .track-move:hover { color: var(--text); }
+.track-chip .track-move:disabled { opacity: 0.3; cursor: default; }
+.track-chip .track-move:disabled:hover { color: var(--text-dim); }
+.track-chip-mix { color: var(--text-dim); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }

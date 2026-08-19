@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Entry point for `flatpak run io.github.eklonofficial.Vice [args...]`.
+#
+# - No args (launched from the app grid / .desktop file) -> vice-app
+#   (starts the daemon if needed, opens the web UI via xdg-open).
+# - Any args (e.g. `start --no-open-ui`, `status`, `clip`, `stop`, `doctor`)
+#   -> forwarded straight to the `vice` CLI. This is what your systemd user
+#   service on the host should call, since systemd user units can't live
+#   *inside* the sandbox: see BAZZITE.md.
+set -euo pipefail
+
+if [[ $# -eq 0 ]]; then
+    exec vice-app
+else
+    exec vice "$@"
+fi

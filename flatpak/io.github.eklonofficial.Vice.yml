@@ -1,0 +1,133 @@
+id: io.github.eklonofficial.Vice
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: vice-flatpak-launcher
+
+# ── Sandbox permissions ──────────────────────────────────────────────────
+# Every one of these exists because vice does something a stock sandbox
+# would otherwise block. See BAZZITE.md for the long version of each.
+finish-args:
+  # GUI: vice-app opens http://localhost:PORT in the system browser via
+  # xdg-open / the OpenURI portal. No wayland/x11 socket is strictly
+  # required for that, but we keep fallback-x11 so `xdpyinfo`/legacy X11
+  # checks inside vice's own code don't just silently fail on X11 sessions.
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+
+  # Notification sounds (clip saved / session start-stop).
+  - --socket=pulseaudio
+
+  # GPU info probing (nvidia-smi) and, if you ever flip recording.backend
+  # to something sandbox-native, /dev/dri for VA-API.
+  - --device=dri
+
+  # evdev needs raw read access to /dev/input/event*. There is no
+  # finer-grained Flatpak permission than this for global hotkeys.
+  - --device=all
+
+  # Talk to flatpak-spawn so the hostexec/ wrapper scripts can run
+  # gpu-screen-recorder, xdotool, wmctrl, cloudflared, etc. on the HOST,
+  # where they're actually installed and (for GSR) have the right
+  # capabilities set. This is the standard escape hatch Flatpak provides
+  # for exactly this situation.
+  - --talk-name=org.freedesktop.Flatpak
+
+  # Discord Rich Presence: the IPC socket lives at
+  # $XDG_RUNTIME_DIR/discord-ipc-0 (a Unix socket, not a D-Bus name).
+  - --filesystem=xdg-run/discord-ipc-0
+  - --filesystem=xdg-run/app/com.discordapp.Discord:ro
+
+  # Config file + clip output. actual_home_dir() in vice/runtime.py reads
+  # the real passwd home directory, so we grant the real paths rather than
+  # relying on env-var remapping.
+  - --filesystem=xdg-config/vice:create
+  - --filesystem=xdg-videos:create
+  - --filesystem=xdg-data/vice:create
+  # Vice's own default/typical output dir is the literal ASCII "~/Videos",
+  # which is NOT necessarily the same folder as xdg-videos above: on
+  # localized systems (e.g. French), $XDG_VIDEOS_DIR is a different,
+  # translated folder ("~/Vidéos"). Grant the literal path explicitly so
+  # clips are visible to Vice regardless of locale.
+  - --filesystem=~/Videos:create
+
+  # /tmp/vice (pid file, unix control socket) is private per-instance tmpfs
+  # inside the sandbox already; nothing extra needed for that.
+
+  # Env passthrough so wait_for_display()/runtime detection in vice/runtime.py
+  # sees the real session, not the flatpak-sanitized one.
+  - --env=VICE_RUNNING_IN_FLATPAK=1
+
+modules:
+  # ── Host tool wrapper scripts ─────────────────────────────────────────
+  # These are NOT the real binaries. They're one-liners that re-exec the
+  # host's copy through flatpak-spawn --host. vice's own code just calls
+  # e.g. "gpu-screen-recorder" by name via subprocess/shutil.which, so
+  # dropping these on $PATH ahead of everything else is transparent to it.
+  - name: hostexec-wrappers
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 -t /app/bin gpu-screen-recorder
+      - install -Dm755 -t /app/bin wf-recorder
+      - install -Dm755 -t /app/bin ffmpeg
+      - install -Dm755 -t /app/bin ffprobe
+      - install -Dm755 -t /app/bin nvidia-smi
+      - install -Dm755 -t /app/bin xdpyinfo
+      - install -Dm755 -t /app/bin pactl
+      - install -Dm755 -t /app/bin xdotool
+      - install -Dm755 -t /app/bin xprop
+      - install -Dm755 -t /app/bin wmctrl
+      - install -Dm755 -t /app/bin cloudflared
+      - install -Dm755 -t /app/bin wl-copy
+      - install -Dm755 -t /app/bin xclip
+    sources:
+      - type: dir
+        path: hostexec
+
+  # ── Vice itself + its pure-Python runtime deps ────────────────────────
+  # pywebview is deliberately NOT installed: app.py already falls back to
+  # xdg-open when it's absent, which is exactly the "open a browser tab"
+  # behaviour we want in a sandbox anyway (no WebKit/Qt to bundle, no
+  # H.264-in-WebEngine codec headache from install.sh's warn_webengine_wheel).
+  #
+  # NOTE: this module needs network at build time (pip install from PyPI).
+  # Build it with a machine that has internet, e.g.:
+  #   flatpak-builder --user --install --force-clean build-dir \
+  #     io.github.eklonofficial.Vice.yml
+  # `--share=network` below is scoped to this module's build sandbox only;
+  # the *installed app* has no network access unless you add
+  # --share=network to finish-args yourself (not included here on purpose).
+  - name: vice
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - python3 -m ensurepip --upgrade
+      - >-
+        python3 -m pip install --prefix=/app --no-cache-dir --no-warn-script-location
+        "evdev>=1.6.1" "aiohttp>=3.9.0" "click>=8.1.7" "tomli-w>=1.0.0" "psutil>=5.9.0"
+      - >-
+        python3 -m pip install --prefix=/app --no-cache-dir --no-warn-script-location
+        --no-deps ./vice-source
+      - install -Dm755 vice-flatpak-launcher /app/bin/vice-flatpak-launcher
+      - install -Dm644 io.github.eklonofficial.Vice.desktop
+        /app/share/applications/io.github.eklonofficial.Vice.desktop
+      - install -Dm644 io.github.eklonofficial.Vice.metainfo.xml
+        /app/share/metainfo/io.github.eklonofficial.Vice.metainfo.xml
+      - install -Dm644 vice-source/assets/vice.svg
+        /app/share/icons/hicolor/scalable/apps/io.github.eklonofficial.Vice.svg
+    sources:
+      # Point this at the actual Vice project root (the folder containing
+      # pyproject.toml). Adjust the relative path if you lay files out
+      # differently than described in BAZZITE.md.
+      - type: dir
+        path: ../
+        dest: vice-source
+      - type: file
+        path: vice-flatpak-launcher
+      - type: file
+        path: io.github.eklonofficial.Vice.desktop
+      - type: file
+        path: io.github.eklonofficial.Vice.metainfo.xml

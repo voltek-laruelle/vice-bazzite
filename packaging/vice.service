@@ -1,0 +1,18 @@
+[Unit]
+Description=Vice game clip recorder daemon
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/vice start --no-open-ui
+Restart=on-failure
+RestartSec=3
+PassEnvironment=WAYLAND_DISPLAY DISPLAY XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS XDG_SESSION_TYPE XDG_CURRENT_DESKTOP
+
+[Install]
+# graphical-session.target alone was not enough: Hyprland and other
+# compositors that do not go through uwsm never activate it, so the unit was
+# enabled and then simply never started (#139). default.target is always
+# reached by the user manager, and the daemon waits for the session to come
+# up before it starts recording.
+WantedBy=graphical-session.target default.target

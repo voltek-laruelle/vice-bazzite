@@ -1,0 +1,45 @@
+/* ── home.css: greeting, section headers, recent grid, quick toggles ────── */
+.home-sub { margin-top: 5px; font-size: 13.5px; color: var(--text-dim); }
+
+.kbd { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 30px; height: 24px; padding: 2px 7px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+  background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+  border-radius: 6px; color: var(--text); }
+.kbd.double { min-width: 56px; letter-spacing: 0.1em; }
+.kbd.inline-kbd { margin: 0 2px; height: 20px; font-size: 10px; }
+
+.section-hd { display: flex; justify-content: space-between; align-items: baseline; margin: 28px 0 14px; }
+.section-title { font-family: 'Geist', 'Inter', sans-serif; font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+.section-link { background: none; border: none; color: var(--accent-text); font: inherit;
+  font-size: 12.5px; font-weight: 500; cursor: pointer; }
+.section-link:hover { color: #fff; }
+
+.home-clip-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+
+.home-empty { grid-column: 1 / -1; padding: 40px; text-align: center;
+  background: var(--card-sheen), rgba(255,255,255,.02); backdrop-filter: blur(26px);
+  border-radius: var(--r-panel);
+  box-shadow: var(--glass-edge); color: var(--text-dim); font-size: 13px; }
+
+/* Quick toggle cards */
+.home-quick-row { display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+.quick-card { flex: 1; min-width: 220px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; padding: 14px 18px;
+  border-radius: var(--r-card); background: var(--card-sheen), rgba(255,255,255,.02);
+  backdrop-filter: blur(26px); box-shadow: var(--glass-edge); }
+.quick-copy strong { display: block; font-size: 13px; font-weight: 500; }
+.quick-copy span { display: block; font-size: 11.5px; color: rgba(242,245,250,.5); margin-top: 1px; }
+
+.tunnel-readout { display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  margin-top: 14px; background: rgba(0,0,0,.28); border-radius: var(--r-row);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); font-size: 12px; }
+.tunnel-readout svg { width: 14px; height: 14px; color: var(--accent-text); flex-shrink: 0; }
+.tunnel-readout-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-dim); font-size: 11.5px; }
+.tunnel-readout.active .tunnel-readout-text { color: var(--text); }
+.tunnel-copy { background: none; border: none; color: var(--text-dim); cursor: pointer;
+  padding: 4px; border-radius: 4px; display: flex; flex-shrink: 0;
+  transition: color .15s, background .15s; }
+.tunnel-copy:hover { color: var(--text); background: var(--frost); }
+.tunnel-copy svg { width: 13px; height: 13px; color: currentColor; }

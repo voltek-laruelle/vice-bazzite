@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Auto-generated wrapper: re-execute the HOST's real 'xprop' through
+# flatpak-spawn, since it cannot (or should not) run inside the sandbox.
+# vice calls "xprop" by bare name via subprocess/shutil.which, so having
+# this on $PATH ahead of nothing-else makes it transparent.
+exec flatpak-spawn --host xprop "$@"

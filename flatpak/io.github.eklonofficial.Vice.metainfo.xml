@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.eklonofficial.Vice</id>
+  <name>Vice</name>
+  <summary>Instant-replay game clipping for Linux</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      Vice is a Linux game clip recorder for Wayland and X11, in the spirit
+      of Medal.tv. Press one key to save the last 20 seconds of gameplay.
+    </p>
+    <p>
+      This Flatpak build requires gpu-screen-recorder (and, for game
+      detection / Discord presence, xdotool, xprop and wmctrl) to be
+      installed on the host system. See the project README for details.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.eklonofficial.Vice.desktop</launchable>
+  <url type="homepage">https://github.com/eklonofficial/Vice</url>
+  <url type="bugtracker">https://github.com/eklonofficial/Vice/issues</url>
+  <provides>
+    <binary>vice</binary>
+    <binary>vice-app</binary>
+  </provides>
+  <content_rating type="oars-1.1" />
+</component>

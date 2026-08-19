@@ -1,0 +1,120 @@
+/* ── clips.css: page header, clip grid, glass clip cards ────────────────── */
+/* ── Generic page header ────────────────────────────────────────── */
+.page-hd { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+.page-sub { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+.page-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.clips-title-row { display: flex; align-items: center; gap: 16px; }
+
+.perm-warning { display: none; margin-bottom: 18px; padding: 14px 18px; border-radius: var(--r-card);
+  background: rgba(245,181,68,0.08); color: #fbcf76; font-size: 13px;
+  box-shadow: inset 0 0 0 1px rgba(245,181,68,0.28); }
+.perm-warning.show { display: block; }
+.perm-warning code { background: rgba(0,0,0,0.45); border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  padding: 1px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fbcf76; }
+
+#clips-empty { display: none; }
+.empty-stage { text-align: center; padding: 70px 20px;
+  background: var(--card-sheen), rgba(255,255,255,.02);
+  border-radius: var(--r-panel);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), inset 0 0 0 1px rgba(255,255,255,.05); }
+.empty-icon-wrap { width: 60px; height: 60px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(255,255,255,.06); color: var(--accent-text);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.3); }
+#clips-empty h3 { font-family: 'Geist', 'Inter', sans-serif; font-size: 20px; font-weight: 600;
+  letter-spacing: -0.02em; margin-bottom: 8px; }
+#clips-empty p { font-size: 13.5px; color: var(--text-dim); }
+
+/* ── Clip cards ─────────────────────────────────────────────────── */
+.clips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+/* content-visibility lets the engine skip layout, paint and, the part that
+   matters, the decoded thumbnail bitmap for cards scrolled out of view. A
+   640px thumb costs about 900 KB decoded, so a large reel was holding a few
+   hundred MB of bitmaps it could not see, plus a backdrop blur per card. The
+   auto keyword means the remembered size is used once a card has rendered
+   once; the length is only the first guess, so the scrollbar does not jump. */
+.clip-card { position: relative; background: var(--card-sheen), rgba(255,255,255,.02);
+  backdrop-filter: blur(26px); border-radius: var(--r-card);
+  box-shadow: var(--glass-edge), 0 10px 30px rgba(0,0,0,.35);
+  transition: transform .25s var(--ease), box-shadow .25s;
+  content-visibility: auto; contain-intrinsic-size: auto 205px;
+  animation: cardIn .4s var(--ease) backwards; }
+.clip-card:hover { transform: translateY(-3px); }
+@keyframes cardIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.thumb-wrap { position: relative; aspect-ratio: 16/9; background: #081226; overflow: hidden;
+  border-radius: var(--r-card) var(--r-card) 0 0; cursor: pointer; }
+.thumb-wrap img, .thumb-wrap video { width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform .4s var(--ease); }
+.thumb-wrap video.preview-video { display: none; position: absolute; inset: 0; }
+.clip-card:hover .thumb-wrap img { transform: scale(1.04); }
+.clip-card.preview-on .thumb-wrap video.preview-video { display: block; }
+.clip-card.preview-on .thumb-wrap img { opacity: 0; }
+.thumb-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; opacity: 0; transition: opacity .25s; pointer-events: none;
+  background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.45)); }
+.thumb-play-overlay svg { fill: #fff; stroke: none; filter: drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
+.clip-card:hover .thumb-play-overlay { opacity: 1; }
+
+.thumb-placeholder { width: 100%; height: 100%;
+  background: repeating-linear-gradient(45deg, rgba(var(--accent-rgb),.08) 0 12px, rgba(var(--accent-rgb),.02) 12px 24px),
+    linear-gradient(135deg, #0e2140, #081226);
+  display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+
+.clip-dur-badge { position: absolute; bottom: 7px; right: 7px;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+  color: #fff; font-size: 10px; font-weight: 500;
+  padding: 2px 7px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+.clip-new-badge { position: absolute; top: 7px; left: 7px;
+  background: linear-gradient(135deg, var(--accent-hi), var(--accent-lo)); color: #fff;
+  font-size: 9px; font-weight: 600;
+  padding: 2px 7px; border-radius: 6px; letter-spacing: 0.08em;
+  box-shadow: 0 0 14px rgba(var(--accent-rgb),0.5); }
+
+/* A clip ffmpeg cannot read. Listed rather than hidden, because the file is
+   the user's recording and may still be recoverable by hand (#154). */
+.clip-broken-badge { position: absolute; bottom: 7px; left: 7px;
+  background: rgba(180,45,45,.85); color: #fff;
+  font-size: 9px; font-weight: 600;
+  padding: 2px 7px; border-radius: 6px; letter-spacing: 0.08em; }
+.clip-card-broken .thumb-play-overlay { display: none; }
+.clip-broken-note { margin-top: 4px; color: #fcd34d; font-size: 10px;
+  white-space: normal; }
+
+.clip-body { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 13px 12px; }
+.clip-copy { flex: 1 1 0%; min-width: 0; transition: flex-basis .22s var(--ease); }
+.clip-card.renaming .clip-copy { flex-basis: 100%; }
+.clip-name { font-size: 12.5px; font-weight: 500; letter-spacing: -0.01em; cursor: text;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clip-meta { margin-top: 3px; color: rgba(242,245,250,.45); font-size: 10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: margin-top .22s var(--ease); }
+.clip-card.renaming .clip-meta { margin-top: 7px; }
+
+.clip-actions { display: flex; gap: 4px; flex: none; }
+.clip-icon-btn { width: 26px; height: 26px; border-radius: 8px; border: none;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+  color: rgba(242,245,250,.7); cursor: pointer; transition: background .15s, color .15s; }
+.clip-icon-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
+.clip-icon-btn.danger { color: rgba(242,245,250,.55); }
+.clip-icon-btn.danger:hover { background: rgba(255,71,99,.18); color: var(--danger-text); }
+.clip-icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.clip-body .clip-rename-input { width: 100%; background: rgba(255,255,255,0.05); border: none;
+  border-radius: var(--r-xs); color: var(--text); font: inherit; font-size: 12.5px; font-weight: 500;
+  padding: 3px 8px; outline: none; box-shadow: inset 0 0 0 1px var(--accent-hi); }
+
+/* Compact drag image shown when dragging a clip onto a sidebar playlist,
+   in place of the browser's full-size card snapshot. Rendered off-screen
+   just long enough for setDragImage to snapshot it. */
+.clip-drag-ghost { position: fixed; top: -9999px; left: -9999px; z-index: -1;
+  display: flex; align-items: center; gap: 8px; width: 172px; padding: 6px 10px 6px 6px;
+  border-radius: 10px; background: var(--float-sheen), rgba(16,24,44,.92);
+  box-shadow: 0 10px 26px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.1); }
+.clip-drag-ghost img, .clip-drag-ghost-ph { width: 44px; height: 26px; flex-shrink: 0;
+  border-radius: 5px; object-fit: cover; background: rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+.clip-drag-ghost-name { font-size: 12px; font-weight: 500; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -1,0 +1,10 @@
+The TTF files in this directory are static instances generated from the
+variable fonts bundled with the Vice UI (vice/ui/fonts), used only for
+burning titles into exported videos.
+
+Geist            Copyright 2023 Vercel, in collaboration with basement.studio
+Inter            Copyright 2016 The Inter Project Authors
+JetBrains Mono   Copyright 2020 The JetBrains Mono Project Authors
+
+All three families are licensed under the SIL Open Font License, Version 1.1:
+https://openfontlicense.org

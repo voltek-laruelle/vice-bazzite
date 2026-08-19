@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Vice</title>
+<link rel="stylesheet" href="/styles/base.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/nav.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/sidebar.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/home.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/clips.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/playlists.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/settings.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/about.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/player.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/editor.css?v=__VICE_VERSION__">
+<link rel="stylesheet" href="/styles/modals.css?v=__VICE_VERSION__">
+</head>
+<body>
+
+<!-- ── Ambient background: theme-tinted drifting glows ────────────── -->
+<div id="ambient" aria-hidden="true">
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="glow g3"></div>
+</div>
+
+<!-- Covers the first paint until the clips and config have landed, so the
+     UI is never watched assembling itself. Removed by init.js. -->
+<div id="boot">
+  <div class="boot-mark">
+    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.25">
+      <circle cx="12" cy="12" r="9.5"/>
+      <circle cx="12" cy="12" r="3" fill="currentColor"/>
+    </svg>
+    <span class="boot-ring" aria-hidden="true"></span>
+  </div>
+  <div class="boot-word">Vice</div>
+  <div class="boot-sub" id="boot-sub">Loading your clips</div>
+</div>
+
+<div class="app-shell">
+
+  <!-- ── Sidebar ────────────────────────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="side-brand" onclick="nav('home')">
+      <div class="side-brand-mark">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.25">
+          <circle cx="12" cy="12" r="9.5"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        </svg>
+      </div>
+      <span class="side-brand-word">Vice</span>
+      <span class="side-brand-ver">__VICE_VERSION__</span>
+    </div>
+
+    <div class="side-search">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search-input" oninput="onSearch(this.value)" placeholder="Search clips" spellcheck="false">
+    </div>
+
+    <button class="side-item active" data-view="home" onclick="nav('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="side-item" data-view="clips" onclick="nav('clips')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 12h18"/></svg>
+      All Clips
+    </button>
+    <button class="side-item" data-view="editor" onclick="nav('editor')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg>
+      Editor
+    </button>
+    <button class="side-item" data-view="settings" onclick="nav('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.2 4.2l2.9 2.9M16.9 16.9l2.9 2.9M1 12h4M19 12h4M4.2 19.8l2.9-2.9M16.9 7.1l2.9-2.9"/></svg>
+      Settings
+    </button>
+    <button class="side-item" data-view="about" onclick="nav('about')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      About
+    </button>
+
+    <div class="side-pl-hd">
+      <span class="eyebrow-label">PLAYLISTS</span>
+      <button class="side-pl-add" title="New playlist" aria-label="New playlist" onclick="openNewPlaylistModal()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      </button>
+    </div>
+    <div id="sidebar-playlists"></div>
+
+    <div class="side-buffer">
+      <span class="side-buffer-dot"></span>
+      <div class="side-buffer-copy">
+        <div class="side-buffer-title">Buffer live</div>
+        <div class="side-buffer-readout" id="side-buffer-readout">loading</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Content column ─────────────────────────────────────────────── -->
+  <div class="content">
+
+    <div class="content-topbar">
+      <div class="nav-ghosts">
+        <button class="nav-ghost" onclick="nav('home')" title="Home" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <button class="nav-ghost dim" title="Forward" aria-label="Forward">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="topbar-right">
+        <div class="rec-chip" id="rec-chip" title="Recording status">
+          <span class="rec-dot" id="rec-dot"></span>
+          <span class="rec-lbl" id="rec-lbl">Idle</span>
+          <span class="rec-sep" id="rec-sep"></span>
+          <span class="rec-timer mono" id="session-elapsed">0:00</span>
+        </div>
+        <button class="update-chip" id="update-chip" hidden onclick="showUpdate()" title="A new version is available">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          Update
+        </button>
+        <button class="nav-ghost" onclick="showTutorial()" title="Quick guide" aria-label="Quick guide">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        </button>
+        <button class="btn-pill btn-primary-pill" onclick="triggerClip()">
+          <span class="clip-dot"></span>
+          Save Clip
+        </button>
+      </div>
+    </div>
+
+    <!-- Shown when the capture backend would not start. The daemon stays up
+         so this can be said out loud and Settings stays reachable (#156). -->
+    <div id="recorder-banner" hidden>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <div class="codec-banner-text">
+        <strong>Vice is not recording.</strong>
+        <span id="recorder-banner-detail" class="mono"></span>
+        <span id="recorder-banner-hint">Vice keeps retrying on its own. If it is an encoder problem, a reboot after a driver update usually clears it, or pick a different encoder under Settings → Recording.</span>
+      </div>
+    </div>
+
+    <!-- Shown when the GPU encoder was unusable and CPU encoding took over. -->
+    <div id="cpu-fallback-banner" hidden>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <div class="codec-banner-text">
+        <strong>Recording on the CPU.</strong>
+        Your GPU encoder would not open, so Vice fell back to CPU encoding to keep clipping. That costs frames in games. This is usually a driver that needs a reboot after an update. Vice tries the GPU first every time it starts, so once that is sorted this goes away on its own.
+      </div>
+      <button class="codec-banner-close" onclick="document.getElementById('cpu-fallback-banner').hidden = true" aria-label="Dismiss">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Shown when the GPU would not encode the configured codec and
+         gpu-screen-recorder was left to choose one instead. -->
+    <div id="gpu-codec-banner" hidden>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <div class="codec-banner-text">
+        <strong>Recording with a different codec.</strong>
+        Your GPU would not encode the codec picked under Settings → Recording, so gpu-screen-recorder chose one it can handle. Recording is still on the GPU and clips are unaffected. Choosing a different encoder yourself stops this notice, and H.264 in particular tops out at 4096 pixels wide on NVIDIA, so HEVC or AV1 is the one to pick on a wide monitor.
+      </div>
+      <button class="codec-banner-close" onclick="document.getElementById('gpu-codec-banner').hidden = true" aria-label="Dismiss">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Shown when the running Qt WebEngine build has no H.264 decoder
+         (PyPI PyQt6-WebEngine wheels), so clips can never play in-app. -->
+    <div id="codec-banner" hidden>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <div class="codec-banner-text">
+        <strong>Clips can’t play inside this window.</strong>
+        The installed Qt WebEngine build has no H.264 decoder. Recording still works, and clips open fine in your system player.
+        To fix in-app playback, install your distro’s WebEngine package and reinstall Vice:
+        <span class="mono">sudo apt install python3-pyqt6.qtwebengine</span> (Debian, Ubuntu, Mint) ·
+        <span class="mono">sudo dnf install python3-pyqt6-webengine</span> (Fedora) ·
+        <span class="mono">sudo zypper install python3-qt6-webengine</span> (openSUSE).
+      </div>
+      <button class="codec-banner-close" onclick="document.getElementById('codec-banner').hidden = true" aria-label="Dismiss">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <main class="stage">
+
+      <!-- ══════════════════════════════════════════════════════════════
+           HOME
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="view active" id="view-home">
+        <h1 class="display-title" id="home-greeting">Welcome back</h1>
+        <p class="home-sub" id="hero-lede">
+          The last <span class="kbd inline-kbd" id="lede-dur">20s</span> of your gameplay are always in the buffer.
+          Press <span class="kbd inline-kbd" id="lede-key">F9</span> to keep them. Double-tap to start a session.
+        </p>
+
+        <div class="section-hd">
+          <h2 class="section-title">Recent clips</h2>
+          <button class="section-link" onclick="nav('clips')">See all ›</button>
+        </div>
+        <div class="home-clip-row" id="home-clip-row"></div>
+
+        <div class="section-hd">
+          <h2 class="section-title">Playlists</h2>
+          <button class="section-link" onclick="openNewPlaylistModal()">New playlist +</button>
+        </div>
+        <div class="home-pl-row" id="home-playlists"></div>
+
+        <div id="home-viewed-section" style="display:none">
+          <div class="section-hd">
+            <h2 class="section-title">Most viewed</h2>
+          </div>
+          <div class="home-clip-row" id="home-viewed-row"></div>
+        </div>
+
+        <div class="home-quick-row">
+          <div class="quick-card">
+            <div class="quick-copy"><strong>Microphone</strong><span>Include mic in new clips</span></div>
+            <label class="toggle">
+              <input type="checkbox" id="home-mic-toggle" onchange="onClipMicToggleChange(this)">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="quick-card">
+            <div class="quick-copy"><strong>Desktop audio</strong><span>Capture system sound</span></div>
+            <label class="toggle">
+              <input type="checkbox" id="home-audio-toggle" onchange="onHomeAudioToggle(this)">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="quick-card">
+            <div class="quick-copy"><strong>Public tunnel</strong><span>Share links beyond your LAN</span></div>
+            <label class="toggle">
+              <input type="checkbox" id="home-cf-toggle" onchange="onHomeTunnelToggle(this)">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="tunnel-readout" id="tunnel-readout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          <span class="tunnel-readout-text mono" id="tunnel-readout-text">Tunnel inactive</span>
+          <button class="tunnel-copy" onclick="copyTunnelUrl()" title="Copy public URL" aria-label="Copy public URL">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           CLIPS / PLAYLIST
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="view" id="view-clips">
+        <div class="page-hd">
+          <div class="clips-title-row">
+            <div id="playlist-header-tile" class="pl-header-tile" style="display:none"></div>
+            <div>
+              <h1 class="display-title" id="clips-title">All Clips</h1>
+              <p class="page-sub" id="clip-sub">Loading…</p>
+            </div>
+          </div>
+          <div class="page-actions">
+            <button class="btn-pill btn-ghost-pill btn-sm" id="playlist-edit-btn" style="display:none" onclick="openEditPlaylistModal()">Edit</button>
+            <button class="btn-pill btn-danger-pill btn-sm" id="playlist-delete-btn" style="display:none" onclick="deleteCurrentPlaylist()">Delete playlist</button>
+          </div>
+        </div>
+
+        <div class="perm-warning" id="hotkey-perm-warning">
+          <strong>Global hotkeys are unavailable.</strong> Vice can still save clips from this button, but keyboard hotkeys cannot read
+          <code>/dev/input/event*</code> right now. Add yourself to the <code>input</code> group:
+          <code>sudo usermod -aG input $USER</code>, then log out and back in.
+        </div>
+
+        <div id="clips-empty">
+          <div class="empty-stage">
+            <div class="empty-icon-wrap">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 12h18"/></svg>
+            </div>
+            <h3>The reel is empty</h3>
+            <p id="empty-hint">Press <span class="kbd inline-kbd">F9</span> to save the last 20 seconds. Double-tap to start a session recording.</p>
+          </div>
+        </div>
+
+        <div class="clips-grid" id="clips-grid"></div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           EDITOR
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="view" id="view-editor">
+        <div class="ed-main">
+
+          <aside class="ed-panel" id="ed-library">
+            <div class="ed-tabs">
+              <div class="ed-tab-glider" id="ed-tab-glider"></div>
+              <button class="ed-tab active" data-tab="library" onclick="edSetTab('library')">Library</button>
+              <button class="ed-tab" data-tab="effects" onclick="edSetTab('effects')">Effects</button>
+              <button class="ed-tab" data-tab="text" onclick="edSetTab('text')">Text</button>
+            </div>
+            <div class="ed-lib-search" id="ed-lib-searchwrap">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input id="ed-lib-search" oninput="edLibSearch(this.value)" placeholder="Search clips" spellcheck="false">
+            </div>
+            <div class="ed-lib-scroll" id="ed-lib-scroll"></div>
+            <div class="ed-lib-hint" id="ed-lib-hint">Drag a clip onto the timeline · double-click to append</div>
+          </aside>
+
+          <div class="ed-rsz ed-rsz-h" id="ed-rsz-h"><div class="ed-rsz-bar"></div></div>
+
+          <div class="ed-panel" id="ed-preview">
+            <div class="ed-stage-wrap">
+              <div id="ed-stage">
+                <div class="ed-stage-empty" id="ed-stage-empty">
+                  <div class="ed-stage-empty-title">Nothing at the playhead</div>
+                  <div class="ed-stage-empty-sub">Drag a clip from the library onto the timeline below.</div>
+                </div>
+                <div class="ed-stage-preparing" id="ed-stage-preparing" style="display:none">Preparing H.265 preview…</div>
+                <div id="ed-fade-overlay"></div>
+              </div>
+            </div>
+
+            <div id="ed-inspector" hidden>
+              <div class="ed-insp-hd">
+                <span class="eyebrow-label">TITLE</span>
+                <button class="ed-iconbtn" onclick="edSelect(null)" title="Close" aria-label="Close">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+                </button>
+              </div>
+              <input class="ed-insp-input" id="ed-insp-text" oninput="edInspectorChange('text', this.value)" placeholder="Title text" spellcheck="false">
+              <div>
+                <div class="ed-insp-label">Font</div>
+                <select class="ed-insp-select" id="ed-insp-font" onchange="edInspectorChange('font', this.value)">
+                  <option value="display">Geist</option>
+                  <option value="body">Inter</option>
+                  <option value="mono">JetBrains Mono</option>
+                </select>
+              </div>
+              <div>
+                <div class="ed-insp-label">Size <span id="ed-insp-size-val" class="mono"></span></div>
+                <input type="range" class="ed-insp-range" id="ed-insp-size" min="16" max="400" step="2" oninput="edInspectorChange('size', this.value)">
+              </div>
+              <div>
+                <div class="ed-insp-label">Color</div>
+                <div class="ed-swatches">
+                  <button class="ed-swatch" data-color="#f2f5fa" style="background:#f2f5fa" onclick="edInspectorChange('color', '#f2f5fa')" title="#f2f5fa"></button>
+                  <button class="ed-swatch" data-color="#33adff" style="background:#33adff" onclick="edInspectorChange('color', '#33adff')" title="#33adff"></button>
+                  <button class="ed-swatch" data-color="#c4b5fd" style="background:#c4b5fd" onclick="edInspectorChange('color', '#c4b5fd')" title="#c4b5fd"></button>
+                  <button class="ed-swatch" data-color="#6ee7b7" style="background:#6ee7b7" onclick="edInspectorChange('color', '#6ee7b7')" title="#6ee7b7"></button>
+                  <button class="ed-swatch" data-color="#fdba74" style="background:#fdba74" onclick="edInspectorChange('color', '#fdba74')" title="#fdba74"></button>
+                </div>
+              </div>
+              <span class="ed-insp-pos" id="ed-insp-pos"></span>
+              <button class="ed-btn danger" onclick="edInspectorRemove()">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Remove title
+              </button>
+            </div>
+
+            <div class="ed-transport">
+              <span class="ed-res-chip" id="ed-res-chip">H.264 · 60 fps</span>
+              <button class="ed-btn danger" onclick="edOpenReset()">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Reset
+              </button>
+              <div class="ed-spacer"></div>
+              <button class="ed-iconbtn circle" onclick="edSeek(0)" title="Back to start" aria-label="Back to start">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/></svg>
+              </button>
+              <button class="ed-iconbtn circle" id="ed-btn-play" onclick="edSetPlaying(!edPlaying)" title="Play (space)" aria-label="Play">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+              </button>
+              <div class="ed-spacer"></div>
+              <span class="ed-time" id="ed-time">0:00.0 <span class="dim">/ 0:00.0</span></span>
+              <button class="ed-btn primary" onclick="edOpenExport()">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ed-rsz ed-rsz-v" id="ed-rsz-v"><div class="ed-rsz-bar"></div></div>
+
+        <div class="ed-panel" id="ed-timeline">
+          <div class="ed-tl-toolbar">
+            <button class="ed-btn" id="ed-btn-split" onclick="edSplitSel()" disabled>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg>
+              Split
+            </button>
+            <button class="ed-btn" id="ed-btn-detach" onclick="edDetachAudio()" disabled>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+              Detach audio
+            </button>
+            <button class="ed-btn" id="ed-btn-dup" onclick="edDuplicateSel()" disabled>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              Duplicate
+            </button>
+            <button class="ed-btn danger" id="ed-btn-del" onclick="edDeleteSel()" disabled>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Delete
+            </button>
+            <div class="ed-spacer"></div>
+            <span class="ed-pps" id="ed-pps-readout">12 px/s</span>
+            <button class="ed-iconbtn" onclick="edZoom(1/1.3)" title="Zoom out" aria-label="Zoom out">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            </button>
+            <button class="ed-iconbtn" onclick="edZoom(1.3)" title="Zoom in" aria-label="Zoom in">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+            <button class="ed-btn" onclick="edFit()">Fit</button>
+            <div class="ed-add-track-wrap">
+              <button class="ed-btn" onclick="edToggleAddTrackMenu()">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Track
+              </button>
+              <div id="ed-add-track-menu" hidden>
+                <button onclick="edAddTrack('video'); edToggleAddTrackMenu()">Video track</button>
+                <button onclick="edAddTrack('audio'); edToggleAddTrackMenu()">Audio track</button>
+              </div>
+            </div>
+          </div>
+          <div class="ed-tl-scroll" id="ed-tl-scroll">
+            <div class="ed-tl-canvas" id="ed-tl-canvas"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           SETTINGS
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="view" id="view-settings">
+        <div class="page-hd">
+          <div>
+            <h1 class="display-title">Settings</h1>
+            <p class="page-sub">Tune Vice to the way you play</p>
+          </div>
+        </div>
+
+        <div class="settings-layout">
+          <aside class="settings-rail">
+            <button class="rail-item active" data-rail="recording">Recording</button>
+            <button class="rail-item" data-rail="audio">Audio</button>
+            <button class="rail-item" data-rail="hotkeys">Hotkeys</button>
+            <button class="rail-item" data-rail="storage">Storage</button>
+            <button class="rail-item" data-rail="sharing">Sharing</button>
+            <button class="rail-item" data-rail="discord">Discord</button>
+            <button class="rail-item" data-rail="appearance">Appearance</button>
+            <button class="rail-item" data-rail="advanced">Advanced</button>
+          </aside>
+
+          <div class="settings-wrap">
+
+            <div class="settings-card" data-section="recording">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                <span>Recording</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label"><strong>Buffer duration</strong><span id="s-buf-note">Seconds of gameplay kept in the rolling buffer</span></div>
+                <div class="range-group">
+                  <input type="range" id="s-buf" min="30" max="1800" step="30" value="120"
+                         oninput="document.getElementById('s-buf-v').textContent=fmtSec(+this.value); updateBufferNote()">
+                  <span class="range-val mono" id="s-buf-v">2 min</span>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Replay storage</strong><span>Where the rolling buffer lives (gpu-screen-recorder). Auto keeps short buffers in RAM and moves buffers over 10 minutes to disk.</span></div>
+                <select id="s-replay-storage" onchange="updateBufferNote()">
+                  <option value="auto">Auto (recommended)</option>
+                  <option value="ram">RAM</option>
+                  <option value="disk">Disk</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Clip duration</strong><span>Seconds saved when you press the clip key</span></div>
+                <div class="range-group">
+                  <input type="range" id="s-dur" min="5" max="1800" step="5" value="20"
+                         oninput="document.getElementById('s-dur-v').textContent=fmtSec(+this.value)">
+                  <span class="range-val mono" id="s-dur-v">20 s</span>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Frame rate</strong><span>Capture frames per second</span></div>
+                <select id="s-fps">
+                  <option value="24">24 fps</option>
+                  <option value="30">30 fps</option>
+                  <option value="50">50 fps</option>
+                  <option value="60" selected>60 fps</option>
+                  <option value="120">120 fps</option>
+                  <option value="144">144 fps</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Resolution</strong><span>Output resolution (auto = match your display)</span></div>
+                <select id="s-res" onchange="onResolutionChange()">
+                  <option value="">Auto</option>
+                  <option value="960x540">960×540 (540p)</option>
+                  <option value="1280x720">1280×720 (720p)</option>
+                  <option value="1920x1080">1920×1080 (1080p)</option>
+                  <option value="2560x1440">2560×1440 (1440p)</option>
+                  <option value="3840x2160">3840×2160 (4K)</option>
+                  <option value="custom">Custom…</option>
+                </select>
+              </div>
+
+              <div class="settings-row" id="row-res-custom" style="display:none">
+                <div class="s-label"><strong>Custom resolution</strong><span>Width×height, e.g. 1600x900</span></div>
+                <input type="text" id="s-res-custom" class="mono" placeholder="1600x900" spellcheck="false">
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Container</strong><span>MKV survives crashes better and suits multi-track audio. Discord embeds and browsers need MP4.</span></div>
+                <select id="s-container">
+                  <option value="mp4">MP4 (best compatibility)</option>
+                  <option value="mkv">MKV (crash-safe)</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Video encoder</strong><span>GPU encoders are faster with lower CPU usage</span></div>
+                <select id="s-enc">
+                  <option value="auto">Auto (recommended)</option>
+                  <option value="h264_nvenc">NVIDIA H.264 (NVENC)</option>
+                  <option value="hevc_nvenc">NVIDIA H.265 (NVENC)</option>
+                  <option value="h264_vaapi">AMD/Intel H.264 (VAAPI)</option>
+                  <option value="hevc_vaapi">AMD/Intel H.265 (VAAPI)</option>
+                  <option value="av1_nvenc">NVIDIA AV1 (NVENC, RTX 40+)</option>
+                  <option value="av1_vaapi">AMD/Intel AV1 (VAAPI)</option>
+                  <option value="libx264">Software H.264 (x264)</option>
+                  <option value="libx265">Software H.265 (x265)</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Colour depth</strong><span id="s-depth-note">8-bit suits every player. 10-bit needs an HEVC or AV1 encoder.</span></div>
+                <select id="s-depth">
+                  <option value="8">8-bit (standard)</option>
+                  <option value="10">10-bit (HEVC or AV1)</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Hardware video decode in previews</strong><span>Let your GPU decode clips in this window instead of the CPU. Worth turning on if high-resolution AV1 or HEVC previews stutter. It renders video black on some drivers, so if that happens turn it back off. Takes effect next time you open Vice.</span></div>
+                <label class="toggle"><input type="checkbox" id="s-hw-decode"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Recording backend</strong><span>Screen capture method</span></div>
+                <select id="s-backend" onchange="onBackendChange()">
+                  <option value="auto">Auto (recommended)</option>
+                  <option value="gsr">gpu-screen-recorder</option>
+                  <option value="wf-recorder">wf-recorder (Wayland)</option>
+                  <option value="ffmpeg">ffmpeg (X11)</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Follow my mouse</strong><span id="s-follow-mouse-note">Record whichever monitor the pointer is on. Switching monitors restarts the buffer, so a clip taken right after moving will be short.</span></div>
+                <label class="toggle"><input type="checkbox" id="s-follow-mouse" onchange="onFollowMouseChange()"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Display</strong><span id="s-display-note">Choose which display to record (Auto = current display)</span></div>
+                <select id="s-display">
+                  <option value="">Auto (current display)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-card" data-section="audio">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                <span>Audio</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label"><strong>Capture desktop audio</strong><span>Include system sound in clips</span></div>
+                <label class="toggle"><input type="checkbox" id="s-audio" onchange="syncTrackWarning()"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Capture microphone</strong><span>Record your mic into clips. Same switch as the mic toggle on the Home page, saved immediately.</span></div>
+                <label class="toggle"><input type="checkbox" id="settings-mic-toggle" onchange="onClipMicToggleChange(this)"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Desktop audio source</strong><span id="s-gsr-audio-note">Choose what gpu-screen-recorder captures</span></div>
+                <select id="s-gsr-audio" onchange="onDesktopSourceChange()">
+                  <option value="default_output">Default output</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Microphone source</strong><span id="s-mic-source-note">Used when mic capture is on. Default input follows the system setting.</span></div>
+                <select id="s-mic-source">
+                  <option value="default_input">Default input</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Mono microphone</strong><span>Centres your mic in the clip. Turn this on if your voice only comes out of one ear, which is what most XLR and single-channel interfaces do. Applied when the clip is saved, so it needs mic capture on and no separate audio tracks.</span></div>
+                <label class="toggle"><input type="checkbox" id="s-mic-mono"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row" id="row-vol-desktop">
+                <div class="s-label"><strong>Desktop audio volume</strong><span>Balanced into new clips when they are saved (gpu-screen-recorder)</span></div>
+                <div class="range-group">
+                  <input type="range" id="s-vol-desktop" min="0" max="200" step="5" value="100"
+                         oninput="setText('s-vol-desktop-v', this.value + '%')">
+                  <span class="range-val mono" id="s-vol-desktop-v">100%</span>
+                </div>
+              </div>
+
+              <div class="settings-row" id="row-vol-mic">
+                <div class="s-label"><strong>Microphone volume</strong><span>Turn this down if your mic overpowers the game audio. Applies while mic capture is on.</span></div>
+                <div class="range-group">
+                  <input type="range" id="s-vol-mic" min="0" max="200" step="5" value="100"
+                         oninput="setText('s-vol-mic-v', this.value + '%')">
+                  <span class="range-val mono" id="s-vol-mic-v">100%</span>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Notification volume</strong><span>The ping when a clip is saved, and the session start, stop and highlight tones. Slide to 0 for silence.</span></div>
+                <div class="range-group">
+                  <input type="range" id="s-vol-notify" min="0" max="100" step="5" value="100"
+                         oninput="setText('s-vol-notify-v', this.value > 0 ? this.value + '%' : 'Off')">
+                  <span class="range-val mono" id="s-vol-notify-v">100%</span>
+                </div>
+              </div>
+
+              <div class="settings-row settings-row-stack">
+                <div class="s-label"><strong>Custom sounds</strong><span>Play your own file instead of the built-in tone. Leave blank for the tone. A path that does not exist falls back to the tone, so you never end up with silence.</span></div>
+                <div class="sound-grid">
+                  <label for="s-snd-clip">Clip saved</label>
+                  <input type="text" id="s-snd-clip" placeholder="~/sounds/clip.wav" spellcheck="false">
+                  <label for="s-snd-clip-failed">Clip failed</label>
+                  <input type="text" id="s-snd-clip-failed" placeholder="~/sounds/failed.wav" spellcheck="false">
+                  <label for="s-snd-session-start">Session started</label>
+                  <input type="text" id="s-snd-session-start" placeholder="~/sounds/start.wav" spellcheck="false">
+                  <label for="s-snd-session-end">Session stopped</label>
+                  <input type="text" id="s-snd-session-end" placeholder="~/sounds/stop.wav" spellcheck="false">
+                  <label for="s-snd-highlight">Highlight marked</label>
+                  <input type="text" id="s-snd-highlight" placeholder="~/sounds/highlight.wav" spellcheck="false">
+                </div>
+              </div>
+
+              <div class="settings-row settings-row-stack">
+                <div class="s-label"><strong>Separate audio tracks</strong><span>Each source becomes its own track for editing. Players, Discord, and shares play track 1. With mic capture on, your microphone gets its own track. Empty = one mixed track.</span></div>
+                <div class="track-builder">
+                  <div class="track-add-row">
+                    <select id="s-track-pick"></select>
+                    <button class="btn-pill btn-ghost-pill" type="button" onclick="addAudioTrack()">Add track</button>
+                    <button class="btn-pill btn-ghost-pill btn-sq" type="button" id="s-track-refresh" title="Refresh source list" aria-label="Refresh source list" onclick="refreshSourcesClicked(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+                  </div>
+                  <div id="s-track-list" class="track-list"></div>
+                  <div id="s-track-warning" class="track-warning" hidden></div>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Combined first track</strong><span>Record an extra track 1 that mixes every source, so players and shared clips carry full audio. Your separate tracks start at 2.</span></div>
+                <label class="toggle"><input type="checkbox" id="s-track-mix" onchange="renderAudioTracks()"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>wf-recorder microphone mode</strong><span>How wf-recorder handles desktop audio + microphone</span></div>
+                <select id="s-wf-mic">
+                  <option value="prompt">Ask when needed</option>
+                  <option value="backend_fallback">Use compatible backend</option>
+                  <option value="mic_only">Mic only on wf-recorder</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-card" data-section="hotkeys">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" ry="2"/><path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/><path d="M8 12h.001"/><path d="M12 12h.001"/><path d="M16 12h.001"/><path d="M7 16h10"/></svg>
+                <span>Hotkeys</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Clip key</strong>
+                  <span>Click to rebind, then press a key or combo (e.g. Alt+F9). Escape cancels.</span>
+                </div>
+                <button id="s-key-btn" class="key-capture-btn mono" onclick="startKeyCapture()">KEY_F9</button>
+                <input type="hidden" id="s-key" value="KEY_F9">
+              </div>
+
+              <div class="settings-row settings-row-stack">
+                <div class="s-label">
+                  <strong>Additional clip hotkeys</strong>
+                  <span>Each key saves its own clip duration. Double-tap any clip key to start or stop a session.</span>
+                </div>
+                <div class="clip-preset-panel">
+                  <div id="clip-preset-list" class="clip-preset-list"></div>
+                  <button class="btn-pill btn-ghost-pill btn-sm" onclick="addClipPresetRow()">Add hotkey</button>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Ignore hotkeys in these apps</strong>
+                  <span>One per line. Vice leaves its keys alone while a matching app is focused, for games that clip on the same keys. Matched against the window process and class, e.g. ggst.exe. Needs X11, Hyprland or Sway.</span>
+                </div>
+                <textarea id="s-hotkey-blocklist" rows="3" placeholder="ggst.exe" style="width:100%;font-family:monospace;font-size:12px;"></textarea>
+              </div>
+            </div>
+
+            <div class="settings-card" data-section="storage">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                <span>Storage</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label"><strong>Save clips to</strong><span>Directory where clips are saved</span></div>
+                <input type="text" id="s-dir" placeholder="~/Videos/Vice">
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Tag clips with game</strong><span>Append the detected game to clip filenames, e.g. Vice_Clip_4_Overwatch-2.mp4. Uses the same game list as Discord Rich Presence and the auto playlists.</span></div>
+                <label class="toggle"><input type="checkbox" id="s-tag-game"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label"><strong>Create a playlist per game</strong><span>When a known game is focused, file the clip into an auto playlist for that game with its own colour. Uses the same detection as the game tag above.</span></div>
+                <label class="toggle"><input type="checkbox" id="s-auto-playlist"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Clip filename</strong>
+                  <span>Leave empty for the default Vice_Clip_4 naming. Use <code>$n</code> for the clip number, <code>$date</code>, <code>$time</code>, and <code>$game</code> (needs the toggle above). Clips are never overwritten.</span>
+                  <span id="s-clip-name-note"></span>
+                </div>
+                <input type="text" id="s-clip-name" placeholder="clip_$date_$time" oninput="updateClipNamePreview()">
+              </div>
+            </div>
+
+            <div class="settings-card" data-section="sharing">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                <span>Sharing</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label"><strong>HTTP port</strong><span>Port for the local share server</span></div>
+                <input type="number" id="s-port" min="1024" max="65535" value="8765">
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Public tunnel</strong>
+                  <span>Share links that work outside your local network. Needs the cloudflared binary installed, otherwise links only work on your own network.</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="s-cf"><span class="toggle-track"></span></label>
+              </div>
+            </div>
+
+            <div class="settings-card" data-section="discord">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9.5c0-3.5-2.5-6-6-6h-2c-3.5 0-6 2.5-6 6v5c0 3.5 2.5 6 6 6h2c3.5 0 6-2.5 6-6v-5z"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/></svg>
+                <span>Discord Rich Presence</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Enable Rich Presence</strong>
+                  <span>Show "Clipping &lt;Game&gt; with Vice" on your Discord profile while a known game is focused. On by default; turn it off here any time.</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="s-discord-enabled"><span class="toggle-track"></span></label>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Custom games</strong>
+                  <span>One game per line: <code>Display Name | match1, match2, match3</code>. Matches are case-insensitive substrings checked against the focused window's process name and class. Bundled list already covers over 300 popular games.</span>
+                </div>
+                <textarea id="s-discord-custom-games" rows="4" placeholder="My Game | mygame.exe, MyGameClient" style="width:100%;font-family:monospace;font-size:12px;"></textarea>
+              </div>
+
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Client ID override</strong>
+                  <span>Optional. Leave empty to use Vice's default Discord application. Provide your own Application ID for custom branding/icons.</span>
+                </div>
+                <input type="text" id="s-discord-client-id" placeholder="Discord Application ID" style="font-family:monospace;">
+              </div>
+            </div>
+
+            <div class="settings-card" data-section="appearance">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                <span>Appearance</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Accent colour</strong>
+                  <span>Tints the highlight, controls, and the ambient background gradient</span>
+                </div>
+                <div class="swatches" id="swatches">
+                  <div class="swatch active" data-theme="blue"   title="Blue"   style="background:#0099ff" onclick="setTheme('blue')"></div>
+                  <div class="swatch"        data-theme="purple" title="Purple" style="background:#8b5cf6" onclick="setTheme('purple')"></div>
+                  <div class="swatch"        data-theme="green"  title="Green"  style="background:#10b981" onclick="setTheme('green')"></div>
+                  <div class="swatch"        data-theme="red"    title="Red"    style="background:#ef4444" onclick="setTheme('red')"></div>
+                  <div class="swatch"        data-theme="orange" title="Orange" style="background:#f97316" onclick="setTheme('orange')"></div>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="s-label">
+                  <strong>Visual effects</strong>
+                  <span>The glass blurs and the drifting background need a GPU. Auto measures how fast frames arrive here and turns them down when they cannot keep up. <span id="s-effects-note"></span></span>
+                </div>
+                <select id="s-effects" onchange="setEffectsMode(this.value)">
+                  <option value="auto">Auto</option>
+                  <option value="full">Full</option>
+                  <option value="reduced">Reduced</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-card" data-section="advanced">
+              <div class="settings-card-hd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+                <span>Advanced · gpu-screen-recorder</span>
+              </div>
+              <div class="settings-row">
+                <div class="s-label"><strong>Extra args</strong><span>Optional flags appended to gpu-screen-recorder. Example: <code>-k hevc -bm cbr -q 20000 -fm cfr -a {default_sink_monitor}</code></span></div>
+                <input type="text" id="s-gsr-args" placeholder="-k hevc -bm cbr -q 20000 -fm cfr -a {default_sink_monitor}">
+              </div>
+              <div class="settings-row">
+                <div class="s-label"><strong>Check for updates</strong><span>Ask GitHub once a day whether a newer Vice is out, and show a notice when there is. Nothing about you or your clips is sent.</span></div>
+                <label class="toggle"><input type="checkbox" id="s-update-check"><span class="toggle-track"></span></label>
+              </div>
+              <div class="settings-row">
+                <div class="s-label"><strong>Check now</strong><span>Look for a new release straight away, ignoring the daily wait.</span></div>
+                <button class="btn-pill btn-ghost-pill btn-sm" id="s-update-check-btn" onclick="checkForUpdatesNow()">Check now</button>
+              </div>
+            </div>
+
+            <div class="save-bar">
+              <span class="saved-msg" id="saved-msg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Saved
+              </span>
+              <button class="btn-pill btn-primary-pill" onclick="saveSettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save settings
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           ABOUT
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="view" id="view-about">
+        <div class="page-hd">
+          <div>
+            <h1 class="display-title">About</h1>
+            <p class="page-sub">Vice, the game clip recorder for Linux</p>
+          </div>
+        </div>
+
+        <div class="about-wrap">
+          <div class="about-hero">
+            <div class="about-hero-mark">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="about-hero-copy">
+              <h2 class="about-name">Vice</h2>
+              <p class="about-tagline">Linux-first FOSS game clipping.</p>
+              <div class="about-meta">
+                <span class="pill-chip mono">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" x2="7.01" y1="7" y2="7"/></svg>
+                  __VICE_VERSION__
+                </span>
+                <span class="pill-chip mono">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+                  GPL-3.0
+                </span>
+                <span class="pill-chip mono">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 9h2"/><path d="M20 15h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+                  Wayland · X11
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-grid">
+            <div class="about-card">
+              <div class="about-card-hd">
+                <span class="eyebrow-label">SYSTEM</span>
+              </div>
+              <div class="about-row"><span class="about-row-label">Version</span><span class="about-row-val mono">__VICE_VERSION__</span></div>
+              <div class="about-row"><span class="about-row-label">Backend</span><span class="about-row-val mono" id="about-backend">auto</span></div>
+              <div class="about-row"><span class="about-row-label">Buffer</span><span class="about-row-val mono" id="about-buffer">120 s</span></div>
+              <div class="about-row"><span class="about-row-label">Frame rate</span><span class="about-row-val mono" id="about-fps">60 fps</span></div>
+              <div class="about-row"><span class="about-row-label">Clips on disk</span><span class="about-row-val mono" id="about-clips">0</span></div>
+              <div class="about-row"><span class="about-row-label">Total footage</span><span class="about-row-val mono" id="about-footage">0s</span></div>
+            </div>
+
+            <div class="about-card">
+              <div class="about-card-hd">
+                <span class="eyebrow-label">CREDITS</span>
+              </div>
+              <div class="credit-item">
+                <div class="credit-avatar">A</div>
+                <div>
+                  <div class="credit-name">Andrew Marin</div>
+                  <div class="credit-role">Creator &amp; maintainer</div>
+                </div>
+              </div>
+              <div class="credit-item">
+                <div class="credit-avatar dim">C</div>
+                <div>
+                  <div class="credit-name">Community contributors</div>
+                  <div class="credit-role">Bug reports, translations, patches</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="danger-card">
+            <div class="danger-card-hd">DANGER ZONE</div>
+            <div class="danger-body">
+              <p>Uninstalling removes Vice, its systemd units, and the udev rules. Your clips stay put.</p>
+              <div class="uninstall-cmd-row">
+                <span class="uninstall-cmd-text mono">vice uninstall</span>
+                <button class="btn-pill btn-ghost-pill btn-sm" onclick="copyUninstallCmd()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+</div>
+
+<!-- ── Mini player bar (rises to sit just below the viewer modal). Lives
+     outside the app shell so its z-index beats the viewer backdrop. ── -->
+<div id="player-bar" style="display:none">
+  <div class="player-clip" onclick="playerOpenViewer()" title="Open viewer">
+    <img id="player-thumb" alt="">
+    <div class="player-titles">
+      <div class="player-title" id="player-title"></div>
+      <div class="player-game mono" id="player-game"></div>
+    </div>
+  </div>
+  <div class="player-controls">
+    <button class="player-btn-sm" onclick="playerPrev()" title="Previous clip" aria-label="Previous clip">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M6 4h2v16H6zM20 4 9.5 12 20 20z"/></svg>
+    </button>
+    <button class="player-btn-main" id="player-toggle-btn" onclick="playerToggle()" title="Play / pause" aria-label="Play / pause"></button>
+    <button class="player-btn-sm" onclick="playerNext()" title="Next clip" aria-label="Next clip">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 4h-2v16h2zM4 4l10.5 8L4 20z"/></svg>
+    </button>
+  </div>
+  <div class="player-scrub">
+    <span class="mono player-tc" id="player-time">0:00</span>
+    <div class="player-track" id="player-track" onclick="playerSeek(event)">
+      <div class="player-fill" id="player-fill"></div>
+      <div class="player-knob" id="player-knob"></div>
+    </div>
+    <span class="mono player-tc" id="player-dur">0:00</span>
+  </div>
+  <div class="player-extra">
+    <button onclick="playerShare()" title="Copy share link" aria-label="Copy share link">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+    </button>
+    <button onclick="closePlayerBar()" title="Close player" aria-label="Close player">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ── Quit row (pywebview only) ──────────────────────────────────── -->
+<div class="quit-float" id="quit-row" style="display:none">
+  <button class="quit-btn" onclick="keepRunning()" title="Close window, recording continues">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" x2="21" y1="10" y2="3"/><line x1="3" x2="10" y1="21" y2="14"/></svg>
+    Minimize
+  </button>
+  <button class="quit-btn stop" onclick="quitVice()" title="Stop recording and quit Vice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+    Quit
+  </button>
+</div>
+
+<!-- ── Toasts ─────────────────────────────────────────────────────── -->
+<div class="toasts" id="toasts"></div>
+
+<!-- ── Tutorial modal ─────────────────────────────────────────────── -->
+<div id="tutorial-modal" class="hidden">
+  <div class="tutorial-box">
+    <span class="eyebrow-label">QUICK START</span>
+    <div id="tut-page-1">
+      <h2>Start clipping, then let Vice run</h2>
+      <p class="tutorial-sub">Vice keeps the buffer live in the background and opens the UI only when you need it.</p>
+      <div class="tutorial-steps">
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon"><span class="kbd" id="tut-key-1">F9</span></div>
+          <div class="tutorial-step-text">
+            <strong id="tut-title-1">Save the last 20s</strong>
+            <span id="tut-body-1">Press F9 after something worth keeping.</span>
+          </div>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon"><span class="kbd double" id="tut-key-2">·F9·</span></div>
+          <div class="tutorial-step-text">
+            <strong id="tut-title-2">Double-tap for a session</strong>
+            <span id="tut-body-2">Double-tap to start or stop a full recording. Tap once during a session to mark a highlight.</span>
+          </div>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon"><span class="kbd">Clip</span></div>
+          <div class="tutorial-step-text">
+            <strong>Review, trim, and share</strong>
+            <span>Open any clip to rename it, trim the best moment, share a link, or press H to add viewer highlights.</span>
+          </div>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon"><span class="kbd">BG</span></div>
+          <div class="tutorial-step-text">
+            <strong>Close the window safely</strong>
+            <span>Minimize or close the UI and Vice keeps recording. Discord Rich Presence is on by default and configurable in Settings.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="tut-page-2" hidden>
+      <h2>Playlists sort the reel</h2>
+      <p class="tutorial-sub">Every clip can live in any number of playlists, and they keep themselves in order.</p>
+      <div class="tutorial-steps">
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon"><span class="tut-pl-tile tut-pl-auto"></span></div>
+          <div class="tutorial-step-text">
+            <strong>Auto playlists</strong>
+            <span>Clips are filed under the game you were playing when you saved them. Vice builds these on its own.</span>
+          </div>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon"><span class="tut-pl-tile tut-pl-custom">＋</span></div>
+          <div class="tutorial-step-text">
+            <strong>Custom playlists</strong>
+            <span>Create your own from the sidebar, pick an emoji and a colour, then add clips with the ＋ on any clip card.</span>
+          </div>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon"><span class="kbd">Safe</span></div>
+          <div class="tutorial-step-text">
+            <strong>Nothing goes stale</strong>
+            <span>Playlists follow clips through renames and trims, and tidy up after deletions.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tutorial-footer">
+      <button class="btn-pill btn-ghost-pill" id="tut-back-btn" hidden onclick="setTutorialPage(1)">Back</button>
+      <button class="btn-pill btn-primary-pill" id="tut-next-btn" onclick="setTutorialPage(2)">Next</button>
+      <button class="btn-pill btn-primary-pill" id="tut-done-btn" hidden onclick="closeTutorial()">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Manual copy fallback modal ─────────────────────────────────── -->
+<div id="manual-copy-modal" class="hidden">
+  <div class="restart-box">
+    <div class="restart-title">Copy manually</div>
+    <div class="restart-sub">Automatic clipboard access is unavailable on this system. Select the text below and press Ctrl-C.</div>
+    <input type="text" id="manual-copy-text" class="mono manual-copy-input" readonly onclick="this.select()">
+    <div class="restart-actions">
+      <button class="btn-pill btn-ghost-pill" onclick="closeManualCopyModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Update notice: shown once per new release, then only the chip ── -->
+<div id="update-modal" class="hidden">
+  <div class="restart-box update-box">
+    <div class="restart-title" id="update-title">A new version of Vice is out</div>
+    <div class="restart-sub" id="update-sub"></div>
+    <ul class="update-notes" id="update-notes"></ul>
+    <div class="restart-cmd mono" id="update-cmd" hidden></div>
+    <div class="restart-actions">
+      <button class="btn-pill btn-ghost-pill" onclick="dismissUpdate()">Later</button>
+      <button class="btn-pill btn-ghost-pill" onclick="openReleaseNotes()">Release notes</button>
+      <button class="btn-pill btn-primary-pill" id="update-copy-btn" onclick="copyUpdateCmd()">Copy command</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Restart modal ──────────────────────────────────────────────── -->
+<div id="restart-modal" class="hidden">
+  <div class="restart-box">
+    <div class="restart-title">Restart required</div>
+    <div class="restart-sub">Some sharing settings need a Vice restart to take effect. Close and relaunch, or run:</div>
+    <div class="restart-cmd mono">killall vice-app</div>
+    <div class="restart-actions">
+      <button class="btn-pill btn-ghost-pill" onclick="closeRestartModal()">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── wf-recorder mic modal ──────────────────────────────────────── -->
+<div id="wf-mic-modal" class="hidden">
+  <div class="restart-box wf-mic-box">
+    <div class="restart-title">Microphone on wf-recorder</div>
+    <div class="wf-mic-note">
+      wf-recorder can only capture one audio source at a time. Pick how Vice should handle microphone clips going forward.
+    </div>
+    <div class="wf-mic-actions">
+      <button class="btn-pill btn-ghost-pill btn-sm" onclick="chooseWfMicStrategy('backend_fallback')">Use compatible backend</button>
+      <button class="btn-pill btn-ghost-pill btn-sm" onclick="chooseWfMicStrategy('mic_only')">Mic only on wf-recorder</button>
+      <button class="btn-pill btn-primary-pill btn-sm" onclick="closeWfMicModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New playlist modal ─────────────────────────────────────────── -->
+<div id="new-playlist-modal" class="hidden">
+  <div class="npl-box">
+    <h2 class="npl-title" id="npl-title">New playlist</h2>
+    <div class="npl-main">
+      <div class="npl-preview" id="npl-preview"></div>
+      <div class="npl-fields">
+        <input type="text" id="npl-name" placeholder="Playlist name" maxlength="60" spellcheck="false">
+        <input type="text" id="npl-emoji" placeholder="Emoji or initials (optional)" maxlength="4" spellcheck="false">
+      </div>
+    </div>
+    <div class="eyebrow-label npl-colors-label">COLOUR</div>
+    <div class="npl-colors" id="npl-colors"></div>
+    <div class="npl-actions">
+      <button class="btn-pill btn-ghost-pill" onclick="closeNewPlaylistModal()">Cancel</button>
+      <button class="btn-pill btn-primary-pill" id="npl-submit-btn" onclick="submitPlaylistModal()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Trim modal ─────────────────────────────────────────────────── -->
+<div id="trim-modal" class="backdrop" onclick="onBackdropClick(event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title" id="trim-title">Trim</div>
+      <button class="modal-close" onclick="closeTrim()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="trim-video-box">
+        <video id="trim-video" controls></video>
+        <div id="trim-video-preparing" class="video-prep-overlay" hidden>
+          <div class="video-prep-spinner"></div>
+          <div class="video-prep-msg">Preparing H.265 preview…</div>
+        </div>
+        <div id="trim-video-error" class="video-error-overlay" hidden>
+          <div class="video-error-msg" id="trim-video-error-msg"></div>
+          <div class="video-error-actions">
+            <button class="btn-pill btn-primary-pill btn-sm" onclick="openClipExternally(trimSlug)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+              Open in system player
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="trim-time-row">
+        <span>In <span class="tc mono" id="t-in">0s</span></span>
+        <span>Duration <span class="tc-dur mono" id="t-dur">0s</span></span>
+        <span>Out <span class="tc mono" id="t-out">0s</span></span>
+      </div>
+      <div class="timeline" id="timeline">
+        <div class="tl-track"></div>
+        <div class="tl-selection" id="tl-sel"></div>
+        <div class="tl-handle" id="tl-h-start"></div>
+        <div class="tl-handle" id="tl-h-end"></div>
+        <div class="tl-playhead" id="tl-playhead"></div>
+      </div>
+      <div class="trim-tc-row mono">
+        <span>start <span id="tc-start">00:00:00.000</span></span>
+        <span>end <span id="tc-end">00:00:00.000</span></span>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button id="trim-preview-btn" class="btn-pill btn-ghost-pill btn-sm" onclick="toggleTrimPreview()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        Preview
+      </button>
+      <span class="modal-ft-left" id="trim-status">Loops the selection · cut bounds are lossless</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-pill btn-ghost-pill btn-sm" onclick="closeTrim()">Cancel</button>
+        <button id="trim-save-btn" class="btn-pill btn-primary-pill btn-sm" onclick="saveTrim()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg>
+          Save trim
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Viewer modal ───────────────────────────────────────────────── -->
+<!-- ── Editor export modal ─────────────────────────────────────────── -->
+<div id="ed-export-modal" class="backdrop" onclick="edExportBackdrop(event)">
+  <div class="modal ed-export-modal">
+    <div class="modal-hd">
+      <span class="modal-title">Export video</span>
+      <button class="modal-close" onclick="edCloseExport()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="ed-export-form">
+        <div class="ed-field">
+          <div class="ed-insp-label">Save as</div>
+          <input class="ed-insp-input" id="ed-export-name" placeholder="Vice_Edit_1 (automatic if empty)" oninput="edExportSummary()" spellcheck="false">
+        </div>
+        <div class="ed-field">
+          <div class="ed-insp-label">Location</div>
+          <select class="ed-insp-select" id="ed-export-loc" onchange="edExportLocChanged()">
+            <option value="library">Vice library (default)</option>
+            <option value="videos">~/Videos</option>
+            <option value="custom">Custom path…</option>
+          </select>
+        </div>
+        <div class="ed-field" id="ed-export-custom-field" hidden>
+          <div class="ed-insp-label">Custom path</div>
+          <input class="ed-insp-input" id="ed-export-custom" placeholder="/path/to/folder" oninput="edExportSummary()" spellcheck="false">
+        </div>
+        <div class="ed-field ed-also-row" id="ed-export-also" hidden>
+          <div>
+            <div class="ed-also-title">Also add to Vice</div>
+            <div class="ed-also-sub">Keep a copy in your library so it shows up with your clips</div>
+          </div>
+          <label class="ed-toggle">
+            <input type="checkbox" id="ed-export-add" checked>
+            <span class="ed-toggle-track"></span>
+            <span class="ed-toggle-knob"></span>
+          </label>
+        </div>
+        <div class="ed-export-summary" id="ed-export-summary"></div>
+        <div class="ed-export-warn" id="ed-export-warn" hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          Recording is active. Rendering now shares the machine with the capture encoder.
+        </div>
+      </div>
+      <div id="ed-export-busy" hidden>
+        <div style="font-size:13px;font-weight:500;margin-bottom:12px">Rendering…</div>
+        <div class="ed-progress-track"><div id="ed-progress-fill"></div></div>
+        <div class="ed-progress-label" id="ed-progress-label">0% · encoding H.264</div>
+      </div>
+      <div id="ed-export-done" hidden>
+        <div class="ed-done-row">
+          <span class="ed-done-ic">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </span>
+          <div>
+            <div class="ed-done-title">Export complete</div>
+            <div class="ed-done-path" id="ed-export-done-path"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <div class="modal-ft-left"></div>
+      <div id="ed-export-ft-form" style="display:flex;gap:8px">
+        <button class="ed-btn" onclick="edCloseExport()">Cancel</button>
+        <button class="ed-btn primary" onclick="edStartExport()">Export</button>
+      </div>
+      <div id="ed-export-ft-busy" hidden>
+        <button class="ed-btn danger" onclick="edCancelExport()">Cancel export</button>
+      </div>
+      <div id="ed-export-ft-done" hidden>
+        <button class="ed-btn primary" onclick="edCloseExport()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Editor reset confirm ────────────────────────────────────────── -->
+<div id="ed-reset-modal" class="backdrop" onclick="if (event.target === this) edCloseReset()">
+  <div class="modal ed-reset-modal">
+    <div class="modal-hd">
+      <span class="modal-title">Reset editor?</span>
+      <button class="modal-close" onclick="edCloseReset()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.55">
+        This clears every clip, transition and title from the timeline. Your clips stay
+        safe in the library, and Ctrl+Z can still bring the edit back until you close Vice.
+      </div>
+    </div>
+    <div class="modal-ft">
+      <div class="modal-ft-left"></div>
+      <div style="display:flex;gap:8px">
+        <button class="ed-btn" onclick="edCloseReset()">Cancel</button>
+        <button class="ed-btn danger" onclick="edConfirmReset()">Yes, reset everything</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="viewer-modal" class="backdrop" onclick="onViewerBackdropClick(event)">
+  <div class="modal viewer-modal">
+    <div class="modal-hd">
+      <div style="min-width:0;flex:1">
+        <div class="modal-title" id="viewer-clip-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div class="modal-ft-left mono" id="viewer-clip-meta"></div>
+      </div>
+      <span class="mono" id="viewer-count" style="font-size:11px;color:var(--text-dim)"></span>
+      <button class="viewer-nav-btn" id="viewer-prev" onclick="viewerPrev()" aria-label="Previous clip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="viewer-nav-btn" id="viewer-next" onclick="viewerNext()" aria-label="Next clip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="modal-close" onclick="closeViewer()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="viewer-video-wrap" onclick="playerToggle()">
+      <video id="viewer-video"></video>
+      <button class="viewer-play-btn" id="viewer-play-btn" aria-label="Play / pause"></button>
+      <span class="viewer-timebadge mono" id="viewer-timebadge">0:00 / 0:00</span>
+      <div id="viewer-video-preparing" class="video-prep-overlay" hidden onclick="event.stopPropagation()">
+        <div class="video-prep-spinner"></div>
+        <div class="video-prep-msg">Preparing H.265 preview…</div>
+      </div>
+      <div id="viewer-video-error" class="video-error-overlay" hidden onclick="event.stopPropagation()">
+        <div class="video-error-msg" id="viewer-video-error-msg"></div>
+        <div class="video-error-actions">
+          <button class="btn-pill btn-primary-pill btn-sm" onclick="openClipExternally(viewerSlug)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+            Open in system player
+          </button>
+          <button class="btn-pill btn-ghost-pill btn-sm" onclick="revealClip(viewerSlug)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
+            Show in folder
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="viewer-bottom">
+      <div class="viewer-timeline" id="viewer-timeline" onclick="viewerTimelineClick(event)">
+        <div class="viewer-progress" id="viewer-progress"></div>
+        <div class="viewer-playhead" id="viewer-playhead"></div>
+        <div id="viewer-hl-markers"></div>
+      </div>
+      <div class="viewer-hl-hd">
+        <span class="eyebrow-label">HIGHLIGHTS</span>
+        <button class="btn-pill btn-ghost-pill btn-sm" onclick="addHighlight()">
+          ＋ Highlight <span class="kbd inline-kbd">H</span>
+        </button>
+      </div>
+      <div class="viewer-hl-list" id="viewer-hl-list"></div>
+      <div class="viewer-footer">
+        <span class="viewer-shortcuts mono">← → clips · H highlight · Esc close</span>
+        <div class="viewer-footer-btns">
+          <button class="btn-pill btn-ghost-pill btn-sm" onclick="viewerTrim()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg>
+            Trim
+          </button>
+          <button class="btn-pill btn-ghost-pill btn-sm" onclick="playerShare()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn-pill btn-ghost-pill btn-sm" onclick="revealClip(viewerSlug)" title="Reveal in file manager">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
+            Reveal
+          </button>
+          <button class="btn-pill btn-danger-pill btn-sm" onclick="viewerDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/scripts/icons.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/state.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/helpers.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/theme.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/perf.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/modals.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/nav.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/pywebview.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/status.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/home.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/clips.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/playlists.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/trim.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/viewer.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/player.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/ws.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/editor-core.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/editor-library.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/editor-timeline.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/editor-preview.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/editor-export.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/settings.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/updates.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/hotkeys.js?v=__VICE_VERSION__"></script>
+<script src="/scripts/init.js?v=__VICE_VERSION__"></script>
+
+</body>
+</html>

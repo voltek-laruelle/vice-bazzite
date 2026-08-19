@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Without this wrapper, "ffprobe" resolves to the minimal build bundled
+# inside the org.freedesktop.Platform runtime itself (limited codecs, no
+# working h264 decoder) instead of the host's full ffmpeg install.
+exec flatpak-spawn --host ffprobe "$@"

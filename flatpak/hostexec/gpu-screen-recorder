@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# gpu-screen-recorder is installed as a FLATPAK on the host
+# (com.dec05eba.gpu_screen_recorder). Its default "command" launches the
+# GTK GUI (gpu-screen-recorder-gtk), so the actual CLI tool must be
+# targeted explicitly with --command=gpu-screen-recorder.
+# flatpak-spawn --host runs this on the host; from there we reach into
+# the GSR flatpak itself via a second `flatpak run`.
+exec flatpak-spawn --host flatpak run --command=gpu-screen-recorder \
+    com.dec05eba.gpu_screen_recorder "$@"

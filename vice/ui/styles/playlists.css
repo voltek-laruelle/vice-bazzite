@@ -1,0 +1,66 @@
+/* ── playlists.css: home tiles, detail header, add menu, new-playlist modal ── */
+/* Home playlist tiles */
+.home-pl-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.home-pl-tile { width: 150px; cursor: pointer; }
+.home-pl-art { aspect-ratio: 1; border-radius: var(--r-card);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 0 0 1px rgba(255,255,255,.08), 0 10px 26px rgba(0,0,0,.4);
+  display: flex; flex-direction: column; justify-content: space-between; padding: 12px;
+  transition: transform .25s var(--ease); }
+.home-pl-tile:hover .home-pl-art { transform: translateY(-3px); }
+.home-pl-emoji { font-size: 22px; min-height: 26px; }
+.home-pl-name { font-family: 'Geist', 'Inter', sans-serif; font-weight: 600; font-size: 15px;
+  letter-spacing: -.02em; text-shadow: 0 2px 8px rgba(0,0,0,.4);
+  overflow: hidden; text-overflow: ellipsis; }
+.home-pl-meta { margin-top: 8px; font-size: 10px; color: rgba(242,245,250,.45); }
+
+.home-pl-tile-new { aspect-ratio: 1; border-radius: var(--r-card);
+  border: 1.5px dashed rgba(255,255,255,.18); background: rgba(255,255,255,.03);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: rgba(242,245,250,.5); font-size: 12px; font-weight: 500; transition: background .2s; }
+.home-pl-tile:hover .home-pl-tile-new { background: rgba(255,255,255,.06); }
+
+/* Playlist detail header tile (clips view) */
+.pl-header-tile { width: 84px; height: 84px; flex: none; border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 0 0 1px rgba(255,255,255,.08), 0 14px 34px rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; font-size: 30px; }
+
+/* Add-to-playlist menu (anchored glass popover) */
+.pl-menu { position: fixed; z-index: 300; min-width: 180px; max-width: 240px;
+  border-radius: 12px; background: var(--card-sheen), rgba(16,22,40,.65);
+  backdrop-filter: blur(50px) saturate(1.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.07), 0 16px 40px rgba(0,0,0,.6);
+  padding: 6px; animation: modalIn .2s var(--ease); }
+.pl-menu-hd { padding: 6px 10px 4px; font-size: 9px; }
+.pl-menu-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; width: 100%;
+  background: none; border: none; text-align: left; border-radius: 8px;
+  font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer; }
+.pl-menu-item:hover { background: rgba(255,255,255,.08); }
+.pl-menu-emoji { font-size: 12px; min-width: 16px; }
+.pl-menu-empty { padding: 7px 10px; font-size: 12px; color: rgba(242,245,250,.5); }
+
+/* New playlist modal */
+#new-playlist-modal { position: fixed; inset: 0; z-index: 3000;
+  display: grid; place-items: center; padding: 24px;
+  background: rgba(3,5,10,.55); backdrop-filter: blur(6px); animation: fadeIn .25s; }
+#new-playlist-modal.hidden { display: none; }
+
+.npl-box { width: min(420px, 100%); border-radius: 20px; background: var(--float-sheen), rgba(16,22,40,.58);
+  backdrop-filter: blur(60px) saturate(1.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.07), 0 30px 80px rgba(0,0,0,.6);
+  padding: 24px; animation: modalIn .3s var(--ease); }
+.npl-title { font-family: 'Geist', 'Inter', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.npl-main { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
+.npl-preview { width: 84px; height: 84px; flex: none; border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 0 0 1px rgba(255,255,255,.08), 0 12px 30px rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; font-size: 30px; transition: background .3s; }
+.npl-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+.npl-fields input { width: 100%; background: rgba(0,0,0,.3); border: none; outline: none;
+  border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+  color: var(--text); font: inherit; font-size: 13.5px; padding: 10px 13px; }
+.npl-colors-label { margin: 18px 0 10px; }
+.npl-colors { display: flex; gap: 9px; flex-wrap: wrap; }
+.npl-color { width: 30px; height: 30px; border-radius: 9px; border: none; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25); transition: transform .15s; }
+.npl-color:hover { transform: scale(1.12); }
+.npl-color.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px rgba(255,255,255,.85); }
+.npl-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
