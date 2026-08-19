@@ -1,17 +1,26 @@
 id: io.github.eklonofficial.Vice
-runtime: org.freedesktop.Platform
-runtime-version: '23.08'
-sdk: org.freedesktop.Sdk
+# GNOME runtime instead of bare Freedesktop: it's the only one that ships
+# WebKitGTK (webkit2gtk-4.1), which is what lets vice-app open a real
+# native window (pywebview's GTK backend) instead of falling back to
+# xdg-open/the system browser. GTK3 itself already comes from the
+# Freedesktop base that this runtime builds on.
+runtime: org.gnome.Platform
+runtime-version: '46'
+sdk: org.gnome.Sdk
 command: vice-flatpak-launcher
 
 # ── Sandbox permissions ──────────────────────────────────────────────────
 # Every one of these exists because vice does something a stock sandbox
 # would otherwise block. See BAZZITE.md for the long version of each.
 finish-args:
-  # GUI: vice-app opens http://localhost:PORT in the system browser via
-  # xdg-open / the OpenURI portal. No wayland/x11 socket is strictly
-  # required for that, but we keep fallback-x11 so `xdpyinfo`/legacy X11
-  # checks inside vice's own code don't just silently fail on X11 sessions.
+  # GUI: vice-app now opens a native pywebview (GTK/WebKit2GTK) window.
+  # --socket=wayland lets it run natively on Wayland compositors;
+  # --socket=fallback-x11 covers X11 sessions and is also what the NVIDIA
+  # XWayland workaround (GDK_BACKEND=x11 in vice/app.py) relies on. If
+  # pywebview/WebKit2 ever fail to import at runtime, vice-app falls back
+  # to opening http://localhost:PORT via xdg-open / the OpenURI portal,
+  # which is why both sockets stay even though nothing here is stripped
+  # back to browser-only on purpose anymore.
   - --socket=wayland
   - --socket=fallback-x11
   - --share=ipc
@@ -86,10 +95,14 @@ modules:
         path: hostexec
 
   # ── Vice itself + its pure-Python runtime deps ────────────────────────
-  # pywebview is deliberately NOT installed: app.py already falls back to
-  # xdg-open when it's absent, which is exactly the "open a browser tab"
-  # behaviour we want in a sandbox anyway (no WebKit/Qt to bundle, no
-  # H.264-in-WebEngine codec headache from install.sh's warn_webengine_wheel).
+  # pywebview (GTK backend) IS installed here so vice-app opens a real
+  # native window instead of falling back to xdg-open/the browser. Its
+  # GTK backend needs PyGObject + WebKit2 typelibs, which is why the base
+  # runtime above was switched to org.gnome.Platform -- that runtime
+  # already ships PyGObject and pycairo system-wide (distutils-installed,
+  # can't be safely upgraded by pip), so we install pywebview with
+  # --no-deps and only add the two pure-Python deps it's missing
+  # (bottle, proxy_tools) instead of letting it try to reinstall those.
   #
   # NOTE: this module needs network at build time (pip install from PyPI).
   # Build it with a machine that has internet, e.g.:
@@ -108,6 +121,12 @@ modules:
       - >-
         python3 -m pip install --prefix=/app --no-cache-dir --no-warn-script-location
         "evdev>=1.6.1" "aiohttp>=3.9.0" "click>=8.1.7" "tomli-w>=1.0.0" "psutil>=5.9.0"
+      - >-
+        python3 -m pip install --prefix=/app --no-cache-dir --no-warn-script-location
+        bottle proxy_tools
+      - >-
+        python3 -m pip install --prefix=/app --no-cache-dir --no-warn-script-location
+        --no-deps "pywebview>=5.0"
       - >-
         python3 -m pip install --prefix=/app --no-cache-dir --no-warn-script-location
         --no-deps ./vice-source

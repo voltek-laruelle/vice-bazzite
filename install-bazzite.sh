@@ -171,7 +171,10 @@ fi
 # ═════════════════════════════════════════════════════════════════════
 step "5/7 -- Flatpak runtimes for Vice itself"
 # ═════════════════════════════════════════════════════════════════════
-for rt in "org.freedesktop.Platform//23.08" "org.freedesktop.Sdk//23.08"; do
+# org.gnome.Platform/Sdk (not bare Freedesktop): it's the runtime that
+# actually ships WebKitGTK, which is what lets vice-app open a native
+# window instead of falling back to the browser.
+for rt in "org.gnome.Platform//46" "org.gnome.Sdk//46"; do
     if flatpak info --system "$rt" >/dev/null 2>&1 || flatpak info --user "$rt" >/dev/null 2>&1; then
         ok "$rt already installed."
     else

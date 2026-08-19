@@ -926,11 +926,18 @@ def _run_webview(url: str) -> None:
     # pywebview's Qt backend imports `qtpy` (a Qt-binding shim) plus the
     # PyQt6 QtWebEngine bindings, both must be present.
     def _enable_gtk_workarounds() -> None:
-        # WebKit2GTK + Wayland + NVIDIA crashes with "Error 71 (Protocol error)".
-        # XWayland is the safe path. These vars are harmless on other setups.
+        # WebKit2GTK + Wayland + NVIDIA crashes with "Error 71 (Protocol error)",
+        # XWayland is the safe path there. Everywhere else, forcing X11 just
+        # breaks the window: Flatpak's --socket=fallback-x11 only provides a
+        # real X11 socket/DISPLAY when the host actually runs XWayland for
+        # it, and on a plain Wayland session there may be no DISPLAY at all
+        # (GTK then fails with "cannot open display: ''"). Native Wayland
+        # GDK works fine for WebKit2GTK outside the NVIDIA case, so only
+        # force X11 there; everyone else keeps GTK's default backend choice.
         os.environ.setdefault("WEBKIT_DISABLE_SANDBOX", "1")
         os.environ.setdefault("WEBKIT_DISABLE_DMABUF_RENDERER", "1")
-        os.environ.setdefault("GDK_BACKEND", "x11")
+        if _is_nvidia() and os.environ.get("WAYLAND_DISPLAY"):
+            os.environ.setdefault("GDK_BACKEND", "x11")
 
     try:
         import PyQt6.QtWebEngineWidgets  # noqa: F401, probe
