@@ -22,8 +22,8 @@ from .runtime import actual_home_dir
 
 log = logging.getLogger("vice.updates")
 
-RELEASES_URL = "https://api.github.com/repos/eklonofficial/Vice/releases/latest"
-RELEASE_PAGE = "https://github.com/eklonofficial/Vice/releases/latest"
+RELEASES_URL = "https://api.github.com/repos/voltek-laruelle/vice-bazzite/releases/latest"
+RELEASE_PAGE = "https://github.com/voltek-laruelle/vice-bazzite/releases/latest"
 CACHE_PATH = actual_home_dir() / ".local" / "share" / "vice" / "update.json"
 
 # One check a day. The unauthenticated GitHub limit is 60/hour per IP, so

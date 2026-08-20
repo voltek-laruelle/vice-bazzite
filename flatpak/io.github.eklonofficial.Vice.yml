@@ -9,6 +9,21 @@ runtime-version: '46'
 sdk: org.gnome.Sdk
 command: vice-flatpak-launcher
 
+# WebKitGTK's own GStreamer stack has no H.264 decoder in the sandbox by
+# default (codec licensing), so the in-app clip player fails with "Vice
+# could not play this clip in the app window" even though the recorded
+# file is fine (the app's own "Open in system player" fallback proves it).
+# The Freedesktop ffmpeg-full extension supplies that decoder; version
+# must match the Freedesktop SDK release GNOME 46 is built on.
+add-extensions:
+  org.freedesktop.Platform.ffmpeg-full:
+    directory: lib/ffmpeg
+    version: '23.08'
+    add-ld-path: '.'
+
+cleanup-commands:
+  - mkdir -p /app/lib/ffmpeg
+
 # ── Sandbox permissions ──────────────────────────────────────────────────
 # Every one of these exists because vice does something a stock sandbox
 # would otherwise block. See BAZZITE.md for the long version of each.
