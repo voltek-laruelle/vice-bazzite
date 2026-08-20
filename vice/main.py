@@ -953,6 +953,8 @@ class ViceDaemon:
 
     def _update_install_hint(self) -> dict:
         """How this machine should update, so the notice can say it exactly."""
+        if _installed_via_flatpak():
+            return {"method": "flatpak", "command": "cd Vice && git pull && ./install-bazzite.sh"}
         if _installed_via_aur():
             return {"method": "aur", "command": "yay -Syu vice-clipper"}
         if _using_install_script_venv():
@@ -1255,6 +1257,11 @@ def _vice_command_path() -> Optional[Path]:
         return Path(exe).resolve()
     except OSError:
         return Path(exe)
+
+
+def _installed_via_flatpak() -> bool:
+    """True when this process is running inside the Vice Flatpak sandbox."""
+    return Path("/.flatpak-info").exists() or bool(os.environ.get("FLATPAK_ID"))
 
 
 def _installed_via_aur() -> bool:
