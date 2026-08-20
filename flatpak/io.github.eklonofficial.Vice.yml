@@ -69,6 +69,12 @@ finish-args:
   - --filesystem=xdg-config/vice:create
   - --filesystem=xdg-videos:create
   - --filesystem=xdg-data/vice:create
+  # Clip thumbnails: _make_thumb() in vice/share.py writes JPEGs to
+  # ~/.cache/vice/thumbs (actual_home_dir(), same real-path reasoning as
+  # above). Without this, THUMB_DIR.mkdir() is silently blocked by the
+  # sandbox, ffmpeg's thumbnail write fails, and clip cards fall back to
+  # the placeholder icon instead of a real preview image.
+  - --filesystem=xdg-cache/vice:create
   # Vice's own default/typical output dir is the literal ASCII "~/Videos",
   # which is NOT necessarily the same folder as xdg-videos above: on
   # localized systems (e.g. French), $XDG_VIDEOS_DIR is a different,
